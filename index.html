@@ -19,29 +19,27 @@
         <div class="floating-circle w-32 h-32 top-2/3 right-1/3 opacity-10" style="animation-delay: -7s; animation-duration: 16s;"></div>
     </div>
 
-    <div id="page-top" class="container mx-auto px-4 py-6 lg:py-12 max-w-7xl relative z-10">
+    <div id="page-top" class="container relative z-10">
         <!-- Header -->
-        <header class="text-center mb-8 lg:mb-16 flex flex-col items-center relative">
-            <div class="absolute right-0 top-0 flex gap-2 z-20">
-                <button id="theme-toggle" class="bg-slate-700 hover:bg-slate-600 text-white rounded-full p-3 transition-all duration-300 transform hover:scale-110 hover:rotate-12" title="Toggle Theme">
-                    <span id="theme-icon" class="text-xl">🌙</span>
-                </button>
-            </div>
-            <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight header-glow mb-6">AI Prompt Library</h1>
-            <p class="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">Professional, editable sports betting prompts collection with modern design and advanced features.</p>
+        <header class="header">
+            <button id="theme-toggle" class="theme-toggle" title="Toggle Theme">
+                <span id="theme-icon">🌙</span>
+            </button>
+            <h1 class="header-title">AI Prompt Library</h1>
+            <p class="header-subtitle">Professional, editable sports betting prompts collection with modern design and advanced features.</p>
         </header>
 
         <!-- Search and Filtering -->
-        <div class="mb-8 lg:mb-12">
-            <div class="search-box rounded-2xl p-4 mb-6 transition-all duration-300">
+        <div class="search-section">
+            <div class="search-box">
                 <div class="flex items-center gap-3">
                     <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     <label for="search-input" class="sr-only">Search for sports</label>
-                    <input type="text" id="search-input" placeholder="Search for sports..." class="bg-transparent border-none outline-none text-white w-full text-lg placeholder-slate-400">
+                    <input type="text" id="search-input" placeholder="Search for sports..." class="search-input">
                 </div>
             </div>
             
-            <div class="flex flex-wrap gap-3 justify-center items-center">
+            <div class="filter-section">
                 <button class="category-filter category-badge px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-category="all">All</button>
                 <button class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300" data-category="favorites">⭐ Favorites</button>
                 <button class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300" data-category="traditional">Traditional</button>
@@ -57,7 +55,7 @@
         </div>
 
         <!-- Sports Grid -->
-        <div id="sports-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 lg:gap-6 mb-8 lg:mb-12"></div>
+        <div id="sports-grid" class="sports-grid"></div>
         <div id="no-results" class="text-center py-10" style="display: none;"><p class="text-xl text-slate-400 font-medium">No sports match the current filter.</p></div>
         <div id="load-more-sentinel" class="h-1"></div>
 

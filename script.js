@@ -488,9 +488,9 @@ function copyPrompt() {
         
         // Show success feedback
         if (copyFeedback) {
-            copyFeedback.style.opacity = '1';
+            copyFeedback.classList.add('show');
             setTimeout(() => {
-                copyFeedback.style.opacity = '0';
+                copyFeedback.classList.remove('show');
             }, 2000);
         }
 
@@ -532,12 +532,10 @@ function handleCategoryFilter(event) {
     
     // Update active category button
     document.querySelectorAll('.category-filter').forEach(btn => {
-        btn.classList.remove('category-badge');
-        btn.classList.add('bg-slate-700', 'hover:bg-slate-600');
+        btn.classList.remove('category-badge', 'active');
     });
     
-    event.target.classList.add('category-badge');
-    event.target.classList.remove('bg-slate-700', 'hover:bg-slate-600');
+    event.target.classList.add('category-badge', 'active');
     
     // Filter sports
     let filteredSports;
