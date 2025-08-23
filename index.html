@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Sports Betting Prompt Library</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="text-white">
+    <!-- Lebegő Háttér Elemek -->
+    <div class="floating-elements">
+        <div class="floating-circle w-72 h-72 top-10 left-10 opacity-20" style="animation-delay: -2s; animation-duration: 18s;"></div>
+        <div class="floating-circle w-40 h-40 top-1/3 right-20 opacity-15" style="animation-delay: -5s; animation-duration: 14s;"></div>
+        <div class="floating-circle w-56 h-56 bottom-20 left-1/4 opacity-25" style="animation-delay: -1s; animation-duration: 20s;"></div>
+        <div class="floating-circle w-32 h-32 top-2/3 right-1/3 opacity-10" style="animation-delay: -7s; animation-duration: 16s;"></div>
+    </div>
+
+    <div id="page-top" class="container mx-auto px-4 py-6 lg:py-12 max-w-7xl relative z-10">
+        <!-- Fejléc -->
+        <header class="text-center mb-8 lg:mb-16 flex flex-col items-center relative">
+            <div class="absolute right-0 top-0 flex gap-2 z-20">
+                <button id="theme-toggle" class="bg-slate-700 hover:bg-slate-600 text-white rounded-full p-3 transition-all duration-300 transform hover:scale-110 hover:rotate-12" title="Toggle Theme">
+                    <span id="theme-icon" class="text-xl">🌙</span>
+                </button>
+            </div>
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight header-glow mb-6">AI Prompt Library</h1>
+            <p class="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">Professional, editable sports betting prompts collection with modern design and advanced features.</p>
+        </header>
+
+        <!-- Keresés és Szűrés -->
+        <div class="mb-8 lg:mb-12">
+            <div class="search-box rounded-2xl p-4 mb-6 transition-all duration-300">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <label for="search-input" class="sr-only">Search for sports</label>
+                    <input type="text" id="search-input" placeholder="Search for sports..." class="bg-transparent border-none outline-none text-white w-full text-lg placeholder-slate-400">
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-3 justify-center items-center">
+                <button class="category-filter category-badge px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300" data-category="all">All</button>
+                <button class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300" data-category="favorites">⭐ Favorites</button>
+                <button class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300" data-category="traditional">Traditional</button>
+                <button class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300" data-category="esports">E-Sports</button>
+                <button class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300" data-category="motor">Motorsports</button>
+                <button class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300" data-category="virtual">Virtual</button>
+                <button class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300" data-category="water">Water Sports</button>
+                <button class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300" data-category="precision">Precision</button>
+                <button class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300" data-category="winter">Winter Sports</button>
+                <button class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300" data-category="logic">Logic Games</button>
+                <button id="add-new-prompt-btn" class="btn-add-new px-4 py-2 rounded-full text-sm font-semibold transition-transform hover:scale-105">Add New Prompt</button>
+            </div>
+        </div>
+
+        <!-- Sportágak Rácsa -->
+        <div id="sports-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 lg:gap-6 mb-8 lg:mb-12"></div>
+        <div id="no-results" class="text-center py-10" style="display: none;"><p class="text-xl text-slate-400 font-medium">No sports match the current filter.</p></div>
+        <div id="load-more-sentinel" class="h-1"></div>
+
+        <!-- Prompt Megjelenítő -->
+        <div id="prompt-container" class="prompt-container rounded-3xl p-6 lg:p-10 shadow-2xl prompt-transition prompt-hidden">
+            <button id="close-prompt-button" aria-label="Close prompt" class="absolute top-4 right-5 text-slate-400 hover:text-white transition-all duration-300 text-3xl leading-none hover:scale-110 hover:rotate-90">&times;</button>
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                    <h2 id="prompt-title" class="text-2xl lg:text-4xl font-bold text-blue-400 mb-2"></h2>
+                    <p id="prompt-category" class="text-slate-400 text-sm"></p>
+                </div>
+                <div class="flex gap-3 mt-4 lg:mt-0">
+                    <button id="edit-button" class="bg-slate-600 hover:bg-slate-500 text-white font-semibold py-3 px-6 rounded-xl flex items-center gap-2 transition-all duration-300 transform hover:scale-105">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        Edit
+                    </button>
+                    <button id="copy-button" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center gap-2 transition-all duration-300 transform hover:scale-105">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h1V1.5z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
+                        <span id="copy-text">Copy</span>
+                    </button>
+                </div>
+            </div>
+            <div class="relative">
+                <textarea id="prompt-text" readonly class="w-full h-80 lg:h-96 bg-slate-900/50 border border-slate-600 rounded-2xl p-6 text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none text-sm lg:text-base leading-relaxed transition-all duration-300"></textarea>
+            </div>
+            
+            <!-- Hatékonysági csúszka -->
+            <div class="mt-4 p-4 bg-slate-800/30 rounded-xl border border-slate-600/50">
+                <div class="flex items-center justify-between mb-2">
+                    <label for="effectiveness-slider" class="text-sm font-medium text-slate-300">Prompt Effectiveness</label>
+                    <span id="effectiveness-value" class="text-sm font-bold text-blue-400">75%</span>
+                </div>
+                <input type="range" id="effectiveness-slider" min="1" max="100" value="75" 
+                       class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-thumb">
+                <div class="flex justify-between text-xs text-slate-400 mt-1">
+                    <span>Low (1%)</span>
+                    <span>Medium (50%)</span>
+                    <span>High (100%)</span>
+                </div>
+            </div>
+            
+            <!-- Konkrét mérkőzés és dátum opciók -->
+            <div id="specific-match-options" class="mt-4 p-4 bg-slate-800/30 rounded-xl border border-slate-600/50 hidden">
+                <h4 class="text-sm font-medium text-slate-300 mb-3">🎯 Specific Analysis Options</h4>
+                
+                <!-- Konkrét mérkőzés opció -->
+                <div class="mb-3">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="specific-match-checkbox" class="form-checkbox h-4 w-4 text-blue-600 bg-slate-700 border-slate-600 rounded focus:ring-blue-500">
+                        <span class="text-sm text-slate-300"><span id="sport-icon">⚽</span> Specify match details</span>
+                    </label>
+                    <div id="match-input-container" class="mt-2 hidden">
+                        <input type="text" id="specific-match-input" placeholder="e.g. Barcelona vs Real Madrid" 
+                               class="w-full p-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                
+                <!-- Konkrét dátum opció -->
+                <div class="mb-3">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="specific-date-checkbox" class="form-checkbox h-4 w-4 text-blue-600 bg-slate-700 border-slate-600 rounded focus:ring-blue-500">
+                        <span class="text-sm text-slate-300">📅 Specify match date</span>
+                    </label>
+                    <div id="date-input-container" class="mt-2 hidden">
+                        <input type="date" id="specific-date-input" 
+                               class="w-full p-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="copy-feedback" class="text-center text-green-400 mt-4 h-6 transition-all duration-300 opacity-0 font-semibold">✓ Prompt successfully copied to clipboard!</div>
+            
+            <!-- Eszköz gombok prompt ablak alján -->
+            <div class="tools-inline mt-6 flex flex-wrap gap-4 justify-center" id="tools-inline" style="display:none;">
+                <button id="export-btn-inline" class="tool-btn px-4 py-2 rounded-full transition-all duration-300" title="Export to JSON">
+                    <span>📥</span><span class="ml-2">Export</span>
+                </button>
+                <label for="import-input-inline" class="tool-btn px-4 py-2 rounded-full cursor-pointer transition-all duration-300" title="Import from JSON">
+                    <span>📤</span><span class="ml-2">Import</span>
+                    <input id="import-input-inline" type="file" accept="application/json" class="hidden" />
+                </label>
+                <button id="reset-btn-inline" class="tool-btn px-4 py-2 rounded-full transition-all duration-300" title="Reset to defaults">
+                    <span>🔄</span><span class="ml-2">Reset</span>
+                </button>
+            </div>
+        </div>
+            
+        <!-- Eszköz szekció az oldal alján -->
+        <div class="tools-section rounded-3xl p-8" id="tools-section">
+            <h2 class="text-2xl font-bold text-center mb-8 text-white">Tools and Settings</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center flex flex-col items-center">
+                    <button id="export-btn" class="bg-green-600 hover:bg-green-700 text-white rounded-full p-4 transition-all duration-300 transform hover:scale-110 mb-3" title="Exportálás JSON-ba">
+                        <span class="text-2xl">📥</span>
+                    </button>
+                    <h3 class="font-semibold mb-2 text-slate-200">Export</h3>
+                    <p class="text-sm text-slate-400">Save all your prompts to a JSON file for backup or sharing purposes.</p>
+                </div>
+                <div class="text-center flex flex-col items-center">
+                    <label for="import-input" class="inline-block bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 transition-all duration-300 transform hover:scale-110 cursor-pointer mb-3" title="Importálás JSON-ból">
+                        <span class="text-2xl">📤</span>
+                        <input id="import-input" type="file" accept="application/json" class="hidden" />
+                    </label>
+                    <h3 class="font-semibold mb-2 text-slate-200">Import</h3>
+                    <p class="text-sm text-slate-400">Load previously saved prompts from a JSON file.</p>
+                </div>
+                <div class="text-center flex flex-col items-center">
+                    <button id="reset-btn" class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 transition-all duration-300 transform hover:scale-110 mb-3" title="Reset to defaults">
+                        <span class="text-2xl">🔄</span>
+                    </button>
+                    <h3 class="font-semibold mb-2 text-slate-200">Reset</h3>
+                    <p class="text-sm text-slate-400">Restore original prompts. Warning: all custom prompts will be deleted!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Integration Section -->
+        <div class="ai-section rounded-3xl p-8 mt-8" id="ai-section">
+            <h2 class="text-2xl font-bold text-center mb-8 text-white">AI Integration & Analysis</h2>
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <div class="ai-config-panel rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-4 text-blue-400">🤖 AI Configuration</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">AI Provider</label>
+                            <select id="ai-provider" class="w-full p-3 rounded-lg modal-input">
+                                <option value="">Select AI Provider</option>
+                                <option value="deepseek">DeepSeek</option>
+                                <option value="perplexity">Perplexity Sonar Pro</option>
+                                <option value="chatgpt">ChatGPT-5 High</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="ai-api-key" class="block text-sm font-medium text-slate-300 mb-2">API Key</label>
+                            <input type="password" id="ai-api-key" placeholder="Enter your API key..." class="w-full p-3 rounded-lg modal-input">
+                        </div>
+                        <div class="flex gap-3">
+                            <button id="test-ai-connection" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition">Test Connection</button>
+                            <button id="save-ai-config" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition">Save Config</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="image-upload-panel rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-4 text-purple-400">📸 Image Analysis</h3>
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center transition-all duration-300 hover:border-blue-500">
+                        <div class="text-4xl mb-4">📂</div>
+                        <p class="text-slate-300 mb-2">Drag & drop match images here</p>
+                        <p class="text-sm text-slate-400">or click to select files</p>
+                        <input type="file" id="file-input" accept="image/*" multiple class="hidden">
+                    </div>
+                    <div id="uploaded-images" class="mt-4 space-y-2"></div>
+                </div>
+            </div>
+            
+            <!-- Tips Generation -->
+            <div class="tips-generation-panel rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-green-400">💡 AI-Generated Tips</h3>
+                    <button id="generate-tips" class="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white py-2 px-6 rounded-lg transition" disabled>Generate Tips</button>
+                </div>
+                <div id="ai-tips-container" class="space-y-4">
+                    <p class="text-slate-400 text-center py-8">Configure AI provider and upload match data to generate professional betting tips.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage Instructions Section -->
+        <div class="instructions-section rounded-3xl p-8 mt-8" id="instructions-section">
+            <h2 class="text-2xl font-bold text-center mb-8 text-white">📖 Complete Usage Guide</h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Basic Usage -->
+                <div class="instruction-card rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4 text-blue-400">🚀 Getting Started</h3>
+                    <div class="space-y-3 text-sm text-slate-300">
+                        <p><strong>1. Browse Sports:</strong> Click on any sport card to view its betting analysis prompt.</p>
+                        <p><strong>2. Search & Filter:</strong> Use the search bar or category filters to find specific sports.</p>
+                        <p><strong>3. Copy Prompts:</strong> Use the "Copy" button to copy prompts to your clipboard for use in AI tools.</p>
+                        <p><strong>4. Customize:</strong> Edit existing prompts or add new ones using the "Edit" button.</p>
+                    </div>
+                </div>
+
+                <!-- Advanced Features -->
+                <div class="instruction-card rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4 text-purple-400">⚙️ Advanced Features</h3>
+                    <div class="space-y-3 text-sm text-slate-300">
+                        <p><strong>Effectiveness Slider:</strong> Adjust prompt complexity based on your expertise level.</p>
+                        <p><strong>Specific Matches:</strong> Enable specific match analysis by checking the match option.</p>
+                        <p><strong>Date Analysis:</strong> Set specific dates for time-sensitive betting insights.</p>
+                        <p><strong>Favorites:</strong> Star your most-used sports for quick access.</p>
+                    </div>
+                </div>
+
+                <!-- AI Integration -->
+                <div class="instruction-card rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4 text-green-400">🤖 AI Integration</h3>
+                    <div class="space-y-3 text-sm text-slate-300">
+                        <p><strong>API Setup:</strong> Configure your AI provider (DeepSeek, Perplexity, or ChatGPT-5) with your API key.</p>
+                        <p><strong>Image Analysis:</strong> Upload match screenshots or statistical images for AI-powered analysis.</p>
+                        <p><strong>Auto-Generation:</strong> Generate professional betting tips automatically using AI analysis.</p>
+                        <p><strong>Real-time Tips:</strong> Get instant, PhD-level betting insights without manual prompt engineering.</p>
+                    </div>
+                </div>
+
+                <!-- Data Management -->
+                <div class="instruction-card rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4 text-yellow-400">💾 Data Management</h3>
+                    <div class="space-y-3 text-sm text-slate-300">
+                        <p><strong>Export:</strong> Save all your custom prompts to a JSON backup file.</p>
+                        <p><strong>Import:</strong> Load previously saved prompts from backup files.</p>
+                        <p><strong>Reset:</strong> Restore original prompts (warning: deletes all customizations).</p>
+                        <p><strong>Auto-Save:</strong> Your customizations are automatically saved to browser storage.</p>
+                    </div>
+                </div>
+
+                <!-- Best Practices -->
+                <div class="instruction-card rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4 text-red-400">🎯 Best Practices</h3>
+                    <div class="space-y-3 text-sm text-slate-300">
+                        <p><strong>Prompt Optimization:</strong> Adjust effectiveness levels based on the complexity of your analysis needs.</p>
+                        <p><strong>Match Context:</strong> Always provide specific match details for more accurate AI predictions.</p>
+                        <p><strong>Multiple Sources:</strong> Use different AI providers to cross-reference betting insights.</p>
+                        <p><strong>Risk Management:</strong> Remember that AI tips are analytical tools, not guarantees.</p>
+                    </div>
+                </div>
+
+                <!-- Technical Support -->
+                <div class="instruction-card rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4 text-cyan-400">🛠️ Technical Support</h3>
+                    <div class="space-y-3 text-sm text-slate-300">
+                        <p><strong>Browser Compatibility:</strong> Works best with Chrome, Firefox, Safari, and Edge (latest versions).</p>
+                        <p><strong>API Limits:</strong> Be aware of your AI provider's rate limits and usage quotas.</p>
+                        <p><strong>Data Privacy:</strong> API keys are stored locally and never transmitted to our servers.</p>
+                        <p><strong>Troubleshooting:</strong> Clear browser cache if experiencing issues with saved data.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Professional Disclaimer -->
+            <div class="disclaimer-card rounded-2xl p-6 mt-8">
+                <h3 class="text-lg font-bold mb-4 text-orange-400">⚠️ Professional Disclaimer</h3>
+                <div class="text-sm text-slate-300 space-y-2">
+                    <p>This AI-powered sports betting prompt library is designed for educational and analytical purposes. The generated tips and insights are based on artificial intelligence analysis and should not be considered as guaranteed predictions or financial advice.</p>
+                    <p><strong>Responsible Usage:</strong> Always bet responsibly and within your means. Consider the AI-generated tips as one factor among many in your decision-making process.</p>
+                    <p><strong>Legal Compliance:</strong> Ensure that sports betting is legal in your jurisdiction before using these tools for actual wagering.</p>
+                    <p><strong>Data Accuracy:</strong> While our AI integration aims for high accuracy, always verify information from multiple sources before making betting decisions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hozzáadás/Szerkesztés Modál -->
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modal-title" class="text-2xl font-bold mb-6 text-white">Edit Prompt</h3>
+            <form id="edit-form" class="space-y-4">
+                <input type="hidden" id="edit-key">
+                <div>
+                    <label for="edit-name" class="block text-sm font-medium text-slate-300 mb-1">Sport Name</label>
+                    <input type="text" id="edit-name" required class="w-full p-3 rounded-lg modal-input">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-icon" class="block text-sm font-medium text-slate-300 mb-1">Icon (emoji)</label>
+                        <input type="text" id="edit-icon" required class="w-full p-3 rounded-lg modal-input">
+                    </div>
+                    <div>
+                        <label for="edit-category" class="block text-sm font-medium text-slate-300 mb-1">Category</label>
+                        <select id="edit-category" required class="w-full p-3 rounded-lg modal-input">
+                            <option value="traditional">Traditional</option>
+                            <option value="esports">E-Sports</option>
+                            <option value="motor">Motorsports</option>
+                            <option value="virtual">Virtual</option>
+                            <option value="water">Water Sports</option>
+                            <option value="precision">Precision</option>
+                            <option value="winter">Winter Sports</option>
+                            <option value="logic">Logic Games</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label for="edit-prompt-title" class="block text-sm font-medium text-slate-300 mb-1">Prompt Title</label>
+                    <input type="text" id="edit-prompt-title" required class="w-full p-3 rounded-lg modal-input">
+                </div>
+                <div>
+                    <label for="edit-prompt" class="block text-sm font-medium text-slate-300 mb-1">Prompt Text</label>
+                    <textarea id="edit-prompt" required rows="6" class="w-full p-3 rounded-lg modal-input resize-y"></textarea>
+                </div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" id="cancel-edit-btn" class="px-6 py-2 rounded-lg bg-slate-600 hover:bg-slate-500 transition">Cancel</button>
+                    <button type="submit" class="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Megerősítés/Alert Modál -->
+    <div id="alert-modal" class="alert-modal-overlay">
+        <div class="alert-modal-content text-center">
+            <h3 id="alert-modal-title" class="text-xl font-bold mb-4 text-white">Attention</h3>
+            <p id="alert-modal-message" class="text-slate-300 mb-6"></p>
+            <div id="alert-modal-buttons" class="flex justify-center gap-4">
+                <!-- Buttons are added dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="enhanced-script.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 

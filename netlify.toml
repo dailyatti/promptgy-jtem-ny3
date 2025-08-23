@@ -1,0 +1,46 @@
+[build]
+  # No build command needed for static site
+  publish = "."
+
+[build.environment]
+  # Node version if needed
+  NODE_VERSION = "18"
+
+[[headers]]
+  # Apply these headers to all paths in your site
+  for = "/*"
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.deepseek.com https://api.perplexity.ai https://api.openai.com; img-src 'self' data: https:;"
+
+[[redirects]]
+  # Redirect old URLs if needed
+  from = "/old-path/*"
+  to = "/new-path/:splat"
+  status = 301
+
+[[redirects]]
+  # SPA fallback
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  conditions = {Role = ["admin"]}
+
+[dev]
+  # Local development settings
+  command = "python -m http.server 8000"
+  port = 8000
+  publish = "."
+
+# Function settings (if needed)
+[functions]
+  directory = "functions/"
+
+# Environment variables (add via Netlify UI for security)
+# DEEPSEEK_API_KEY = "your-key-here"
+# PERPLEXITY_API_KEY = "your-key-here"  
+# OPENAI_API_KEY = "your-key-here"
