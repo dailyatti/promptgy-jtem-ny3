@@ -13,12 +13,12 @@ class AIManager {
             perplexity: {
                 name: 'Perplexity Sonar Pro',
                 endpoint: 'https://api.perplexity.ai/chat/completions',
-                models: ['sonar-pro']
+                models: ['sonar-deep-research']
             },
             chatgpt: {
-                name: 'ChatGPT-5 High',
+                name: 'OpenAI GPT-4o',
                 endpoint: 'https://api.openai.com/v1/chat/completions',
-                models: ['gpt-5', 'gpt-5-mini', 'gpt-5-nano']
+                models: ['gpt-4o', 'gpt-4o-mini']
             }
         };
         this.currentProvider = null;
@@ -92,8 +92,17 @@ class AIManager {
 
         // Add provider-specific parameters
         if (this.currentProvider === 'perplexity') {
+            requestBody.reasoning_effort = 'medium'; // low, medium, high
             requestBody.return_citations = true;
             requestBody.search_recency_filter = 'month';
+        } else if (this.currentProvider === 'deepseek') {
+            requestBody.frequency_penalty = 0;
+            requestBody.presence_penalty = 0;
+            requestBody.top_p = 1;
+        } else if (this.currentProvider === 'chatgpt') {
+            requestBody.top_p = 1;
+            requestBody.frequency_penalty = 0;
+            requestBody.presence_penalty = 0;
         }
 
         const response = await fetch(provider.endpoint, {
@@ -534,21 +543,57 @@ function setupAIEventListeners() {
 
 // Utility functions for integration with existing code
 function getCurrentSelectedSport() {
-    // This would integrate with your existing sport selection logic
+    // Get current sport from global variable or DOM
+    if (window.currentSelectedSport) {
+        return window.currentSelectedSport;
+    }
     const activeCard = document.querySelector('.sport-card.selected');
-    return activeCard ? activeCard.dataset.sport : null;
+    if (activeCard) {
+        return activeCard.dataset.sport || activeCard.textContent.trim();
+    }
+    return null;
 }
 
 function getCurrentPrompt() {
-    // Get the current prompt text
+    // Get the current prompt text from textarea
     const promptText = document.getElementById('prompt-text');
-    return promptText ? promptText.value : null;
+    if (promptText && promptText.value && promptText.value.trim()) {
+        return promptText.value.trim();
+    }
+    
+    // Fallback: get from global variable if available
+    if (window.currentPromptText) {
+        return window.currentPromptText;
+    }
+    
+    return null;
 }
 
 function initializeExistingFeatures() {
-    // This function would initialize all your existing sports betting library features
-    // You would move your existing initialization code here
-    console.log('Initializing existing sports betting library features...');
+    // Wait for existing script to load
+    console.log('AI features initialized. Waiting for main script...');
+    
+    // Set up integration hooks
+    setupIntegrationHooks();
+}
+
+function setupIntegrationHooks() {
+    // Hook into sport card clicks to enable AI generation
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.sport-card')) {
+            setTimeout(() => {
+                aiManager.updateGenerateButton();
+            }, 100);
+        }
+    });
+    
+    // Hook into prompt text changes
+    const promptText = document.getElementById('prompt-text');
+    if (promptText) {
+        promptText.addEventListener('input', () => {
+            aiManager.updateGenerateButton();
+        });
+    }
 }
 
 // Export for global access

@@ -614,13 +614,32 @@ body.light-theme .category-logic {
     box-shadow: 0 4px 12px rgba(245,158,11,0.15) !important;
 }
 
-/* New AI and Instructions sections for all themes */
-.ai-section, .instructions-section {
+/* New sections for all themes */
+.ai-section, .instructions-section, .quick-guide-section, .disclaimer-section {
     background: rgba(30, 41, 59, 0.95);
     backdrop-filter: blur(25px);
     border: 1px solid rgba(148, 163, 184, 0.2);
     position: relative;
     overflow: hidden;
+}
+
+.disclaimer-section {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Quick Guide Steps */
+.guide-step {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.guide-step:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
 }
 
 .ai-config-panel, .image-upload-panel, .tips-generation-panel, 
@@ -632,10 +651,28 @@ body.light-theme .category-logic {
 
 /* Light theme for new sections */
 body.light-theme .ai-section, 
-body.light-theme .instructions-section {
+body.light-theme .instructions-section,
+body.light-theme .quick-guide-section {
     background: linear-gradient(145deg, #fff1f3, #ffe4e6);
     border: 1px solid #f472b6;
     box-shadow: 0 8px 32px rgba(236,72,153,0.1), 0 4px 16px rgba(251,191,36,0.05);
+}
+
+body.light-theme .disclaimer-section {
+    background: linear-gradient(145deg, #fef2f2, #fee2e2);
+    border: 1px solid #fca5a5;
+    box-shadow: 0 4px 16px rgba(239,68,68,0.1);
+}
+
+body.light-theme .guide-step {
+    background: linear-gradient(145deg, #fef7ff, #f3e8ff);
+    border: 1px solid #f9a8d4;
+    box-shadow: 0 4px 12px rgba(236,72,153,0.08);
+}
+
+body.light-theme .guide-step:hover {
+    box-shadow: 0 12px 28px rgba(236,72,153,0.15), 0 6px 16px rgba(251,191,36,0.1);
+    border-color: #ec4899;
 }
 
 body.light-theme .ai-config-panel, 
@@ -716,4 +753,76 @@ body.light-theme .tip-card {
 
 .copy-tip-btn:hover {
     transform: translateY(-1px);
+}
+
+/* Enhanced responsive design */
+@media (max-width: 768px) {
+    .quick-guide-section .grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    .guide-step {
+        padding: 1rem !important;
+    }
+    
+    .guide-step .text-2xl {
+        font-size: 1.5rem !important;
+    }
+    
+    .ai-section .grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .instructions-section .grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .quick-guide-section .grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Improved animations */
+@keyframes gentleFloat {
+    0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.4; }
+    25% { transform: translateY(-5px) rotate(2deg); opacity: 0.6; }
+    50% { transform: translateY(-8px) rotate(0deg); opacity: 0.3; }
+    75% { transform: translateY(-3px) rotate(-2deg); opacity: 0.5; }
+}
+
+body.light-theme .ai-section::after,
+body.light-theme .instructions-section::after,
+body.light-theme .quick-guide-section::after {
+    content: '🌸✨';
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    font-size: 1.25rem;
+    opacity: 0.4;
+    animation: gentleFloat 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* Enhanced focus states for accessibility */
+.guide-step:focus-within {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Better loading states */
+.loading-shimmer {
+    background: linear-gradient(90deg, 
+        rgba(255,255,255,0) 0%, 
+        rgba(255,255,255,0.1) 50%, 
+        rgba(255,255,255,0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
 } 
