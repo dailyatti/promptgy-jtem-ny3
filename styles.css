@@ -9,7 +9,7 @@ body {
     position: relative;
 }
 
-/* Sötét téma alapbeállítások */
+/* Dark theme base settings */
 body { 
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #334155 60%, #475569 100%);
     background-attachment: fixed;
@@ -100,7 +100,7 @@ body.light-theme .modal-input:focus {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Színek override */
+/* Color override */
 body.light-theme .text-slate-200 { color: #1e293b !important; }
 body.light-theme .text-slate-300 { color: #64748b !important; }
 body.light-theme .text-slate-400 { color: #475569 !important; }
@@ -183,7 +183,7 @@ body.light-theme .favorite-star.is-favorite {
     filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.5));
 }
 
-/* Sötét téma specifikus stílusok */
+/* Dark theme specific styles */
 .sport-card { 
     background: linear-gradient(145deg, #1e293b, #334155); 
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
@@ -393,7 +393,7 @@ body.light-theme .favorite-star.is-favorite {
     background: rgba(30, 41, 59, 0.95); 
     backdrop-filter: blur(25px); 
     border: 1px solid rgba(148, 163, 184, 0.2); 
-    margin-top: 2rem; /* Csökkentett margin */
+    margin-top: 2rem; /* Reduced margin */
     position: relative;
     overflow: hidden;
 }
@@ -419,7 +419,7 @@ body.light-theme .favorite-star.is-favorite {
     transform: translateY(-2px) scale(1.05);
 }
 
-/* Mobile optimalizációk */
+/* Mobile optimizations */
 @media (max-width: 640px) {
     #sports-grid { 
         grid-template-columns: repeat(2, 1fr) !important; 
@@ -451,7 +451,7 @@ body.light-theme .favorite-star.is-favorite {
     }
 }
 
-/* Animációk */
+/* Animations */
 @keyframes fadeInUpCard {
     from { 
         opacity: 0; 
@@ -481,23 +481,23 @@ body.light-theme .favorite-star.is-favorite {
     animation: slideInUp 0.8s ease-out;
 }
 
-/* Scroll területek */
+/* Scroll areas */
 .prompt-container {
     scroll-margin-top: 2rem;
 }
 
-/* Gyorsabb átmenetek */
+/* Faster transitions */
 * {
     transition-duration: 0.3s;
 }
 
-/* Javított focus states */
+/* Improved focus states */
 button:focus, input:focus, textarea:focus, select:focus {
     outline: 2px solid #3b82f6;
     outline-offset: 2px;
 }
 
-/* Hatékonysági csúszka stílusai */
+/* Effectiveness slider styles */
 .slider-thumb {
     background: linear-gradient(90deg, #3b82f6, #8b5cf6);
     border-radius: 0.5rem;
@@ -539,7 +539,7 @@ button:focus, input:focus, textarea:focus, select:focus {
     box-shadow: 0 4px 16px rgba(59, 130, 246, 0.5);
 }
 
-/* Másolási számláló stílusai */
+/* Copy counter styles */
 .copy-counter {
     z-index: 20;
     min-width: 24px;
@@ -554,7 +554,7 @@ button:focus, input:focus, textarea:focus, select:focus {
     50% { transform: scale(1.1); }
 }
 
-/* Világos téma csúszka */
+/* Light theme slider */
 body.light-theme .slider-thumb {
     background: linear-gradient(90deg, #e2e8f0, #cbd5e1);
 }
@@ -569,7 +569,7 @@ body.light-theme .slider-thumb::-moz-range-thumb {
     border: 2px solid #1e293b;
 }
 
-/* Hatékonysági csúszka konténer */
+/* Effectiveness slider container */
 body.light-theme .bg-slate-800\/30 {
     background: rgba(248, 250, 252, 0.8) !important;
     border-color: #cbd5e1 !important;
@@ -579,7 +579,7 @@ body.light-theme .border-slate-600\/50 {
     border-color: rgba(203, 213, 225, 0.5) !important;
 } 
 
-/* Új kategóriák */
+/* New categories */
 .category-special {
     background: linear-gradient(135deg, #8b5cf6, #a855f7) !important;
     box-shadow: 0 4px 12px rgba(139,92,246,0.15) !important;
@@ -595,7 +595,7 @@ body.light-theme .border-slate-600\/50 {
     box-shadow: 0 4px 12px rgba(245,158,11,0.15) !important;
 }
 
-/* Világos téma új kategóriák */
+/* Light theme new categories */
 body.light-theme .category-special {
     background: linear-gradient(135deg, #8b5cf6, #a855f7) !important;
     color: #fff !important;
