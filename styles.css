@@ -45,9 +45,9 @@
   --light-bg-secondary: rgba(255, 255, 255, 0.95);
   --light-bg-card: linear-gradient(145deg, #ffffff, #f8fafc);
   --light-border: rgba(148, 163, 184, 0.3);
-  --light-text-primary: #0f172a;
-  --light-text-secondary: #334155;
-  --light-text-muted: #64748b;
+  --light-text-primary: #1e293b;
+  --light-text-secondary: #0f172a;
+  --light-text-muted: #475569;
   
   /* Spacing */
   --space-xs: 0.25rem;
@@ -180,7 +180,7 @@ body.light-theme p {
 .header {
   position: relative;
   text-align: center;
-  margin-bottom: var(--space-3xl);
+  margin-bottom: var(--space-xl);
   z-index: var(--z-base);
 }
 
