@@ -1161,34 +1161,31 @@ function initializeAIIntegration() {
                             content: [
                                 {
                                     type: "text",
-                                    text: `Analyze this sports betting image carefully and extract ALL visible information. Look for:
-                                    
-1. SPORT TYPE: What sport is shown?
-2. TEAMS/PLAYERS: What teams or players are involved?
-3. MATCH DETAILS: League, tournament, competition type
-4. ODDS: Any betting odds visible in the image
-5. DATE/TIME: Match date or time if visible
-6. SCORES: Current or predicted scores if shown
-7. BETTING MARKETS: Any visible betting options (Over/Under, 1X2, etc.)
+                                    text: `You are a sports betting expert. Analyze this image and extract match information.
 
-Be very specific about what you can actually see in the image. If odds are visible, include the exact numbers. If team names are visible, use the exact names shown.
+INSTRUCTIONS:
+- Look carefully at the image for team names, sport type, leagues, odds, dates
+- Be very specific about what you actually see
+- If you see betting odds, include the exact numbers
+- If you can't identify clear match details, return success: false
 
-Return ONLY a JSON object with this exact structure:
+RESPOND WITH ONLY THIS JSON FORMAT (no markdown, no extra text):
 {
     "success": true,
-    "sport": "exact sport name from image",
-    "team1": "exact team 1 name from image",
-    "team2": "exact team 2 name from image",
-    "match_type": "league/tournament from image", 
-    "date": "date if visible or null",
-    "time": "time if visible or null",
-    "odds_visible": "true/false",
-    "visible_odds": "exact odds from image or null",
-    "betting_markets": "visible betting options or null",
-    "additional_info": "any other specific details from image"
+    "sport": "Football",
+    "team1": "Team A Name",
+    "team2": "Team B Name",
+    "match_type": "Premier League", 
+    "date": "2024-01-28",
+    "time": "15:00",
+    "odds_visible": "true",
+    "visible_odds": "Team A: 2.1, Draw: 3.2, Team B: 3.5",
+    "betting_markets": "1X2, Over/Under 2.5",
+    "additional_info": "Additional context"
 }
 
-If you cannot clearly identify the match information, return {"success": false, "error": "Cannot identify match details from image"}`
+If unclear, return:
+{"success": false, "error": "Cannot identify match details from image"}`
                                 },
                                 {
                                     type: "image_url",
@@ -1199,7 +1196,8 @@ If you cannot clearly identify the match information, return {"success": false, 
                             ]
                         }
                     ],
-                    max_tokens: 500
+                    max_tokens: 800,
+                    temperature: 0.3
                 })
             });
 
@@ -1210,8 +1208,22 @@ If you cannot clearly identify the match information, return {"success": false, 
             const data = await response.json();
             const content = data.choices[0].message.content;
             
-            // Parse the JSON response
-            const analysisResult = JSON.parse(content);
+            console.log('Raw AI response:', content);
+            
+            // Clean and parse the JSON response
+            let analysisResult;
+            try {
+                // Remove any markdown code blocks if present
+                const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+                analysisResult = JSON.parse(cleanContent);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                console.log('Content that failed to parse:', content);
+                return {
+                    success: false,
+                    error: "AI response was not valid JSON format"
+                };
+            }
             
             if (!analysisResult.success) {
                 return {
@@ -1273,23 +1285,35 @@ If you cannot clearly identify the match information, return {"success": false, 
         
         const finalPrompt = `${basePrompt}${oddsInfo}
 
-IMPORTANT: Based on the specific match ${matchData.team1} vs ${matchData.team2} in ${matchData.match_type}, generate exactly 3 professional betting tips. ${matchData.additional_info ? 'Additional context: ' + matchData.additional_info : ''}
+IMPORTANT: Generate exactly 3 professional betting tips for ${matchData.team1} vs ${matchData.team2} in ${matchData.match_type}.
+${matchData.additional_info ? 'Additional context: ' + matchData.additional_info : ''}
 
-Format each tip EXACTLY as:
-"Tip Description @Odds | Probability: XX% | EV: +XX.X% | Confidence Level"
-
-Also provide a brief reasoning (max 2 sentences) for each tip.
-
-Return as JSON:
+RESPOND WITH ONLY THIS JSON FORMAT (no markdown, no extra text):
 {
     "tips": [
         {
-            "description": "tip description",
-            "odds": "odds value",
-            "probability": "XX%",
-            "ev": "+XX.X%", 
-            "confidence": "High/Medium/Low Confidence",
-            "reasoning": "brief explanation"
+            "description": "Over 2.5 Goals",
+            "odds": "1.85",
+            "probability": "62%",
+            "ev": "+14.7%", 
+            "confidence": "High Confidence",
+            "reasoning": "Both teams have strong attacking records and average over 2 goals per game."
+        },
+        {
+            "description": "Team A to Win",
+            "odds": "2.10",
+            "probability": "58%",
+            "ev": "+21.8%", 
+            "confidence": "Medium Confidence",
+            "reasoning": "Home advantage and recent form favor this selection."
+        },
+        {
+            "description": "Both Teams to Score",
+            "odds": "1.70",
+            "probability": "65%",
+            "ev": "+10.5%", 
+            "confidence": "High Confidence",
+            "reasoning": "Both teams have scored in their last 5 matches."
         }
     ]
 }`;
@@ -1321,8 +1345,19 @@ Return as JSON:
             const data = await response.json();
             const content = data.choices[0].message.content;
             
-            // Parse the JSON response
-            const tipsResult = JSON.parse(content);
+            console.log('Raw tip generation response:', content);
+            
+            // Clean and parse the JSON response
+            let tipsResult;
+            try {
+                // Remove any markdown code blocks if present
+                const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+                tipsResult = JSON.parse(cleanContent);
+            } catch (parseError) {
+                console.error('JSON parse error in tip generation:', parseError);
+                console.log('Content that failed to parse:', content);
+                throw new Error("AI tip response was not valid JSON format");
+            }
             
             return tipsResult.tips || [];
             
