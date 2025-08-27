@@ -1116,7 +1116,7 @@ function initializeAIIntegration() {
                 const imageAnalysis = await analyzeMatchImage(images[0], config);
                 
                 if (!imageAnalysis.success) {
-                    showAlert('Could not detect match information from image', 'error');
+                    showAlert(imageAnalysis.error || 'Could not detect match information from image', 'error');
                     return;
                 }
 
@@ -1137,117 +1137,242 @@ function initializeAIIntegration() {
         });
     }
 
-    // AI Image Analysis Function
+    // Real AI Image Analysis Function with OpenAI Vision API
     async function analyzeMatchImage(imageElement, config) {
-        const imagePrompt = `
-        Analyze this sports image and extract the following information:
-        1. What sport is this? (football/soccer, basketball, tennis, etc.)
-        2. What teams/players are involved?
-        3. What type of match/game is this?
-        4. Any visible odds, scores, or match details?
-        5. Date/time information if visible?
-        
-        Return ONLY a JSON object with this structure:
-        {
-            "sport": "sport name",
-            "team1": "team 1 name",
-            "team2": "team 2 name", 
-            "match_type": "league/tournament name",
-            "date": "date if visible",
-            "additional_info": "any other relevant details"
+        if (config.provider !== 'chatgpt' || !config.apiKey) {
+            throw new Error('OpenAI ChatGPT API key required for image analysis');
         }
-        `;
 
-        // Simulate AI image analysis (replace with actual OpenAI Vision API call)
-        const mockAnalysis = {
-            success: true,
-            matchData: {
-                sport: "Football",
-                team1: "Manchester City",
-                team2: "Liverpool",
-                match_type: "Premier League",
-                date: "2024-01-28",
-                additional_info: "High-stakes match between top teams"
+        try {
+            // Convert image to base64
+            const imageBase64 = imageElement.src;
+            
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${config.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-4o",
+                    messages: [
+                        {
+                            role: "user",
+                            content: [
+                                {
+                                    type: "text",
+                                    text: `Analyze this sports betting image carefully and extract ALL visible information. Look for:
+                                    
+1. SPORT TYPE: What sport is shown?
+2. TEAMS/PLAYERS: What teams or players are involved?
+3. MATCH DETAILS: League, tournament, competition type
+4. ODDS: Any betting odds visible in the image
+5. DATE/TIME: Match date or time if visible
+6. SCORES: Current or predicted scores if shown
+7. BETTING MARKETS: Any visible betting options (Over/Under, 1X2, etc.)
+
+Be very specific about what you can actually see in the image. If odds are visible, include the exact numbers. If team names are visible, use the exact names shown.
+
+Return ONLY a JSON object with this exact structure:
+{
+    "success": true,
+    "sport": "exact sport name from image",
+    "team1": "exact team 1 name from image",
+    "team2": "exact team 2 name from image",
+    "match_type": "league/tournament from image", 
+    "date": "date if visible or null",
+    "time": "time if visible or null",
+    "odds_visible": "true/false",
+    "visible_odds": "exact odds from image or null",
+    "betting_markets": "visible betting options or null",
+    "additional_info": "any other specific details from image"
+}
+
+If you cannot clearly identify the match information, return {"success": false, "error": "Cannot identify match details from image"}`
+                                },
+                                {
+                                    type: "image_url",
+                                    image_url: {
+                                        url: imageBase64
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    max_tokens: 500
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`OpenAI API error: ${response.status}`);
             }
-        };
 
-        // Add realistic delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        return mockAnalysis;
+            const data = await response.json();
+            const content = data.choices[0].message.content;
+            
+            // Parse the JSON response
+            const analysisResult = JSON.parse(content);
+            
+            if (!analysisResult.success) {
+                return {
+                    success: false,
+                    error: analysisResult.error || "Could not analyze image"
+                };
+            }
+
+            return {
+                success: true,
+                matchData: {
+                    sport: analysisResult.sport,
+                    team1: analysisResult.team1,
+                    team2: analysisResult.team2,
+                    match_type: analysisResult.match_type,
+                    date: analysisResult.date,
+                    time: analysisResult.time,
+                    odds_visible: analysisResult.odds_visible,
+                    visible_odds: analysisResult.visible_odds,
+                    betting_markets: analysisResult.betting_markets,
+                    additional_info: analysisResult.additional_info
+                }
+            };
+            
+        } catch (error) {
+            console.error('Image analysis error:', error);
+            return {
+                success: false,
+                error: `Failed to analyze image: ${error.message}`
+            };
+        }
     }
 
-    // Generate Real Tips Function
+    // Generate Real Tips Function using actual sport prompts
     async function generateRealTips(matchData, config) {
-        const sportPrompts = {
-            "Football": `
-            Generate 3 professional football betting tips for ${matchData.team1} vs ${matchData.team2} in ${matchData.match_type}.
-            
-            Analyze:
-            - Recent team form and head-to-head record
-            - Current league positions and points
-            - Key player injuries/suspensions
-            - Historical goal scoring patterns
-            - Defensive records
-            
-            Format each tip exactly like this:
-            "Bet Description @Odds | Probability: XX% | EV: +XX.X% | Confidence Level"
-            
-            Example: "Over 2.5 Goals @1.85 | Probability: 62% | EV: +14.7% | High Confidence"
-            
-            Provide reasoning for each tip based on statistical analysis.
-            `,
-            "Basketball": `Generate professional basketball tips for ${matchData.team1} vs ${matchData.team2}...`,
-            "Tennis": `Generate professional tennis tips for ${matchData.team1} vs ${matchData.team2}...`
-        };
+        if (config.provider !== 'chatgpt' || !config.apiKey) {
+            throw new Error('OpenAI ChatGPT API key required for tip generation');
+        }
 
-        const prompt = sportPrompts[matchData.sport] || sportPrompts["Football"];
-
-        // Simulate real tip generation (replace with actual OpenAI API call)
-        const mockTips = [
-            {
-                description: `${matchData.team1} vs ${matchData.team2} - Over 2.5 Goals`,
-                odds: "1.85",
-                probability: "62%",
-                ev: "+14.7%",
-                confidence: "High Confidence",
-                reasoning: "Both teams average 1.8+ goals per game. Strong attacking records suggest high-scoring match.",
-                category: "goals"
-            },
-            {
-                description: `${matchData.team1} Draw No Bet`,
-                odds: "2.10", 
-                probability: "58%",
-                ev: "+21.8%",
-                confidence: "High Confidence",
-                reasoning: "Home advantage and recent form favor this selection. Strong defensive record at home.",
-                category: "result"
-            },
-            {
-                description: `Both Teams to Score - Yes`,
-                odds: "1.72",
-                probability: "68%",
-                ev: "+17.0%",
-                confidence: "Medium Confidence", 
-                reasoning: "Both teams have scored in 7 of their last 10 matches. Attacking threat from both sides.",
-                category: "btts"
-            }
-        ];
-
-        // Add realistic delay for tip generation
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // Get the appropriate sport prompt from the existing sportsData
+        const sportKey = getSportKeyFromName(matchData.sport);
+        const sportData = sportsData[sportKey];
         
-        return mockTips;
+        if (!sportData) {
+            throw new Error(`No prompt available for sport: ${matchData.sport}`);
+        }
+
+        // Use the specific match prompt if available, otherwise use the general prompt
+        let basePrompt = sportData.specificMatchPrompt || sportData.prompt;
+        
+        // Replace placeholders with actual match data
+        basePrompt = basePrompt.replace('{MATCH}', `${matchData.team1} vs ${matchData.team2}`);
+        basePrompt = basePrompt.replace('{DATE}', matchData.date || 'Today');
+        
+        // Add visible odds information if available
+        const oddsInfo = matchData.odds_visible === 'true' && matchData.visible_odds 
+            ? `\n\nVISIBLE ODDS FROM IMAGE: ${matchData.visible_odds}\nVISIBLE BETTING MARKETS: ${matchData.betting_markets || 'Standard markets'}`
+            : '';
+        
+        const finalPrompt = `${basePrompt}${oddsInfo}
+
+IMPORTANT: Based on the specific match ${matchData.team1} vs ${matchData.team2} in ${matchData.match_type}, generate exactly 3 professional betting tips. ${matchData.additional_info ? 'Additional context: ' + matchData.additional_info : ''}
+
+Format each tip EXACTLY as:
+"Tip Description @Odds | Probability: XX% | EV: +XX.X% | Confidence Level"
+
+Also provide a brief reasoning (max 2 sentences) for each tip.
+
+Return as JSON:
+{
+    "tips": [
+        {
+            "description": "tip description",
+            "odds": "odds value",
+            "probability": "XX%",
+            "ev": "+XX.X%", 
+            "confidence": "High/Medium/Low Confidence",
+            "reasoning": "brief explanation"
+        }
+    ]
+}`;
+
+        try {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${config.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-4o",
+                    messages: [
+                        {
+                            role: "user",
+                            content: finalPrompt
+                        }
+                    ],
+                    max_tokens: 1500,
+                    temperature: 0.7
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`OpenAI API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const content = data.choices[0].message.content;
+            
+            // Parse the JSON response
+            const tipsResult = JSON.parse(content);
+            
+            return tipsResult.tips || [];
+            
+        } catch (error) {
+            console.error('Tip generation error:', error);
+            throw new Error(`Failed to generate tips: ${error.message}`);
+        }
+    }
+
+    // Helper function to map sport names to sport keys
+    function getSportKeyFromName(sportName) {
+        const sportMapping = {
+            'Football': 'football',
+            'Soccer': 'football', 
+            'Basketball': 'basketball',
+            'Tennis': 'tennis',
+            'American Football': 'american_football',
+            'Baseball': 'baseball',
+            'Ice Hockey': 'ice_hockey',
+            'Hockey': 'ice_hockey',
+            'Boxing': 'boxing',
+            'MMA': 'mma',
+            'UFC': 'mma',
+            'Golf': 'golf',
+            'Formula 1': 'formula1',
+            'F1': 'formula1',
+            'MotoGP': 'motogp'
+        };
+        
+        return sportMapping[sportName] || 'football'; // Default to football
     }
 
     // Display Generated Tips Function
     function displayGeneratedTips(tips, matchData) {
         const tipContainer = document.getElementById('ai-tips-container');
         
+        const oddsDisplay = matchData.odds_visible === 'true' && matchData.visible_odds 
+            ? `<span class="text-yellow-400">📊 Odds: ${matchData.visible_odds}</span>` 
+            : '';
+            
         const matchInfoHtml = `
             <div class="match-info-banner bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-4 mb-6 border border-blue-500/30">
                 <h3 class="text-lg font-bold text-blue-400 mb-2">🎯 Match Analysis: ${matchData.team1} vs ${matchData.team2}</h3>
-                <p class="text-sm text-slate-300">${matchData.match_type} • ${matchData.date} • ${matchData.additional_info}</p>
+                <div class="text-sm text-slate-300 flex flex-wrap gap-4">
+                    <span>🏆 ${matchData.match_type}</span>
+                    ${matchData.date ? `<span>📅 ${matchData.date}</span>` : ''}
+                    ${matchData.time ? `<span>⏰ ${matchData.time}</span>` : ''}
+                    ${oddsDisplay}
+                </div>
+                ${matchData.additional_info ? `<p class="text-xs text-slate-400 mt-2">${matchData.additional_info}</p>` : ''}
             </div>
         `;
 
