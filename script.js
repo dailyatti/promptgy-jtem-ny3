@@ -955,6 +955,9 @@ function initializeDragAndDrop() {
     // Handle file input change
     fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
+    // Handle Ctrl+V paste functionality
+    document.addEventListener('paste', handlePaste);
+
     function preventDefaults(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -986,19 +989,36 @@ function initializeDragAndDrop() {
         });
     }
 
+    function handlePaste(e) {
+        const items = e.clipboardData.items;
+        
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                e.preventDefault();
+                const file = items[i].getAsFile();
+                if (file) {
+                    displayImage(file);
+                }
+            }
+        }
+    }
+
     function displayImage(file) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const imageContainer = document.createElement('div');
             imageContainer.className = 'relative bg-slate-800 rounded-lg p-3 border border-slate-600';
             
+            const fileName = file.name || `pasted-image-${Date.now()}.png`;
+            const fileSize = file.size || 0;
+            
             imageContainer.innerHTML = `
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                        <img src="${e.target.result}" alt="${file.name}" class="w-12 h-12 object-cover rounded">
+                        <img src="${e.target.result}" alt="${fileName}" class="w-12 h-12 object-cover rounded">
                         <div>
-                            <p class="text-sm font-medium text-slate-200">${file.name}</p>
-                            <p class="text-xs text-slate-400">${(file.size / 1024).toFixed(1)} KB</p>
+                            <p class="text-sm font-medium text-slate-200">${fileName}</p>
+                            <p class="text-xs text-slate-400">${fileSize > 0 ? (fileSize / 1024).toFixed(1) + ' KB' : 'Pasted image'}</p>
                         </div>
                     </div>
                     <button class="remove-image text-red-400 hover:text-red-300 transition-colors" onclick="this.closest('.relative').remove()">

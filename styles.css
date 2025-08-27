@@ -44,10 +44,10 @@
   --light-bg-primary: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
   --light-bg-secondary: rgba(255, 255, 255, 0.95);
   --light-bg-card: linear-gradient(145deg, #ffffff, #f8fafc);
-  --light-border: rgba(148, 163, 184, 0.3);
-  --light-text-primary: #1e293b;
-  --light-text-secondary: #0f172a;
-  --light-text-muted: #475569;
+  --light-border: rgba(51, 65, 85, 0.5);
+  --light-text-primary: #111827;
+  --light-text-secondary: #1f2937;
+  --light-text-muted: #374151;
   
   /* Spacing */
   --space-xs: 0.25rem;
@@ -159,6 +159,58 @@ p {
 
 body.light-theme p {
   color: var(--light-text-secondary);
+}
+
+body.light-theme .header-subtitle {
+  color: var(--light-text-muted);
+  font-weight: 600;
+}
+
+body.light-theme .search-input {
+  color: var(--light-text-primary);
+  font-weight: 500;
+}
+
+body.light-theme .search-input::placeholder {
+  color: var(--light-text-muted);
+  font-weight: 500;
+}
+
+body.light-theme .category-filter {
+  background: var(--light-bg-card);
+  border-color: var(--light-border);
+  color: var(--light-text-primary);
+  font-weight: 600;
+}
+
+body.light-theme .sport-name {
+  color: var(--light-text-primary);
+  font-weight: 700;
+}
+
+body.light-theme .sport-category {
+  color: var(--light-text-muted);
+  font-weight: 600;
+}
+
+body.light-theme .prompt-category {
+  color: var(--light-text-muted);
+  font-weight: 700;
+}
+
+body.light-theme .tool-title {
+  color: var(--light-text-primary);
+  font-weight: 800;
+}
+
+body.light-theme .tool-description {
+  color: var(--light-text-muted);
+  font-weight: 500;
+}
+
+body.light-theme .step-description {
+  color: var(--light-text-muted);
+  font-weight: 500;
 }
 
 /* === LAYOUT COMPONENTS === */
@@ -645,6 +697,7 @@ body.light-theme .prompt-category {
   outline: none;
   transition: all var(--transition-base);
   backdrop-filter: blur(10px);
+  font-weight: 500;
 }
 
 .prompt-textarea:focus {
@@ -653,9 +706,11 @@ body.light-theme .prompt-category {
 }
 
 body.light-theme .prompt-textarea {
-  background: rgba(248, 250, 252, 0.9);
-  border-color: var(--light-border);
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid var(--light-border);
   color: var(--light-text-primary);
+  font-weight: 600;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Copy Feedback */
@@ -922,9 +977,11 @@ body.light-theme .modal-content {
 }
 
 body.light-theme .modal-input {
-  background: var(--light-bg-card);
-  border-color: var(--light-border);
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid var(--light-border);
   color: var(--light-text-primary);
+  font-weight: 600;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Floating Elements */
