@@ -1092,7 +1092,7 @@ function initializeAIIntegration() {
         });
     }
 
-    // Generate tips with AI image recognition
+    // Generate tips with AI image recognition or random sport
     if (generateTipsBtn) {
         generateTipsBtn.addEventListener('click', async () => {
             const config = JSON.parse(localStorage.getItem('aiConfig') || '{}');
@@ -1103,29 +1103,34 @@ function initializeAIIntegration() {
                 return;
             }
 
-            if (images.length === 0) {
-                showAlert('Please upload match images first', 'error');
-                return;
-            }
-
-            generateTipsBtn.textContent = 'Analyzing Image...';
             generateTipsBtn.disabled = true;
 
             try {
-                // Step 1: Analyze image for match detection
-                const imageAnalysis = await analyzeMatchImage(images[0], config);
+                let matchData;
                 
-                if (!imageAnalysis.success) {
-                    showAlert(imageAnalysis.error || 'Could not detect match information from image', 'error');
-                    return;
+                if (images.length === 0) {
+                    // No image uploaded - generate random sport tips
+                    generateTipsBtn.textContent = 'Selecting Random Sport...';
+                    matchData = generateRandomSportMatch();
+                    generateTipsBtn.textContent = 'Generating Professional Tips...';
+                } else {
+                    // Image uploaded - analyze it
+                    generateTipsBtn.textContent = 'Analyzing Image...';
+                    const imageAnalysis = await analyzeMatchImage(images[0], config);
+                    
+                    if (!imageAnalysis.success) {
+                        showAlert(imageAnalysis.error || 'Could not detect match information from image', 'error');
+                        return;
+                    }
+                    
+                    matchData = imageAnalysis.matchData;
+                    generateTipsBtn.textContent = 'Generating Professional Tips...';
                 }
 
-                generateTipsBtn.textContent = 'Generating Professional Tips...';
-
-                // Step 2: Generate real tips based on detected match
-                const tips = await generateRealTips(imageAnalysis.matchData, config);
+                // Generate tips based on match data (from image or random)
+                const tips = await generateRealTips(matchData, config);
                 
-                displayGeneratedTips(tips, imageAnalysis.matchData);
+                displayGeneratedTips(tips, matchData);
                 
             } catch (error) {
                 console.error('Error generating tips:', error);
@@ -1135,6 +1140,98 @@ function initializeAIIntegration() {
                 generateTipsBtn.disabled = false;
             }
         });
+    }
+
+    // Generate random sport match data
+    function generateRandomSportMatch() {
+        const sportKeys = Object.keys(sportsData);
+        const randomSportKey = sportKeys[Math.floor(Math.random() * sportKeys.length)];
+        const randomSport = sportsData[randomSportKey];
+        
+        // Sport-specific team/player pools
+        const teamPools = {
+            football: [
+                ['Manchester City', 'Liverpool'], ['Barcelona', 'Real Madrid'], ['Bayern Munich', 'Borussia Dortmund'],
+                ['PSG', 'Marseille'], ['Juventus', 'AC Milan'], ['Chelsea', 'Arsenal'], ['Atletico Madrid', 'Valencia'],
+                ['Inter Milan', 'AS Roma'], ['Manchester United', 'Tottenham'], ['Ajax', 'PSV Eindhoven']
+            ],
+            basketball: [
+                ['Lakers', 'Celtics'], ['Warriors', 'Clippers'], ['Heat', 'Bulls'], ['Nets', 'Knicks'],
+                ['Bucks', 'Sixers'], ['Suns', 'Nuggets'], ['Mavericks', 'Spurs'], ['Raptors', 'Pacers']
+            ],
+            tennis: [
+                ['Novak Djokovic', 'Rafael Nadal'], ['Carlos Alcaraz', 'Jannik Sinner'], ['Daniil Medvedev', 'Alexander Zverev'],
+                ['Stefanos Tsitsipas', 'Casper Ruud'], ['Andrey Rublev', 'Taylor Fritz'], ['Holger Rune', 'Lorenzo Musetti']
+            ],
+            american_football: [
+                ['Chiefs', 'Bills'], ['Cowboys', 'Eagles'], ['49ers', 'Rams'], ['Packers', 'Vikings'],
+                ['Patriots', 'Jets'], ['Steelers', 'Ravens'], ['Bengals', 'Browns'], ['Dolphins', 'Titans']
+            ],
+            baseball: [
+                ['Yankees', 'Red Sox'], ['Dodgers', 'Giants'], ['Astros', 'Rangers'], ['Braves', 'Phillies'],
+                ['Mets', 'Nationals'], ['Cardinals', 'Cubs'], ['Guardians', 'Tigers'], ['Padres', 'Rockies']
+            ],
+            ice_hockey: [
+                ['Bruins', 'Rangers'], ['Lightning', 'Panthers'], ['Avalanche', 'Golden Knights'], ['Oilers', 'Flames'],
+                ['Leafs', 'Canadiens'], ['Penguins', 'Capitals'], ['Stars', 'Predators'], ['Kings', 'Ducks']
+            ],
+            boxing: [
+                ['Tyson Fury', 'Oleksandr Usyk'], ['Canelo Alvarez', 'Gennady Golovkin'], ['Anthony Joshua', 'Deontay Wilder'],
+                ['Terence Crawford', 'Errol Spence Jr'], ['Ryan Garcia', 'Gervonta Davis'], ['Dmitry Bivol', 'Artur Beterbiev']
+            ],
+            mma: [
+                ['Jon Jones', 'Stipe Miocic'], ['Islam Makhachev', 'Charles Oliveira'], ['Leon Edwards', 'Colby Covington'],
+                ['Alexander Volkanovski', 'Ilia Topuria'], ['Sean O\'Malley', 'Merab Dvalishvili'], ['Tom Aspinall', 'Curtis Blaydes']
+            ],
+            golf: [
+                ['Scottie Scheffler', 'Rory McIlroy'], ['Jon Rahm', 'Viktor Hovland'], ['Collin Morikawa', 'Xander Schauffele'],
+                ['Patrick Cantlay', 'Tony Finau'], ['Max Homa', 'Sam Burns'], ['Cameron Smith', 'Adam Scott']
+            ],
+            formula1: [
+                ['Max Verstappen', 'Lando Norris'], ['Charles Leclerc', 'Carlos Sainz'], ['Lewis Hamilton', 'George Russell'],
+                ['Oscar Piastri', 'Fernando Alonso'], ['Sergio Perez', 'Pierre Gasly'], ['Alexander Albon', 'Logan Sargeant']
+            ],
+            motogp: [
+                ['Francesco Bagnaia', 'Jorge Martin'], ['Marc Marquez', 'Pedro Acosta'], ['Enea Bastianini', 'Marco Bezzecchi'],
+                ['Brad Binder', 'Jack Miller'], ['Fabio Quartararo', 'Alex Rins'], ['Miguel Oliveira', 'Raul Fernandez']
+            ]
+        };
+
+        const leaguePools = {
+            football: ['Premier League', 'La Liga', 'Serie A', 'Bundesliga', 'Ligue 1', 'Champions League'],
+            basketball: ['NBA', 'EuroLeague', 'NCAA', 'NBA Playoffs'],
+            tennis: ['ATP Masters', 'Grand Slam', 'ATP 500', 'ATP 250'],
+            american_football: ['NFL', 'NFL Playoffs', 'Super Bowl'],
+            baseball: ['MLB', 'World Series', 'AL Championship', 'NL Championship'],
+            ice_hockey: ['NHL', 'NHL Playoffs', 'Stanley Cup'],
+            boxing: ['WBC Championship', 'WBA Championship', 'IBF Championship', 'WBO Championship'],
+            mma: ['UFC', 'UFC Championship', 'UFC Main Event'],
+            golf: ['PGA Tour', 'Major Championship', 'Ryder Cup'],
+            formula1: ['Formula 1 Grand Prix', 'F1 Championship'],
+            motogp: ['MotoGP Championship', 'MotoGP Grand Prix']
+        };
+
+        const teams = teamPools[randomSportKey] || teamPools.football;
+        const leagues = leaguePools[randomSportKey] || leaguePools.football;
+        
+        const randomTeams = teams[Math.floor(Math.random() * teams.length)];
+        const randomLeague = leagues[Math.floor(Math.random() * leagues.length)];
+
+        const today = new Date();
+        const matchDate = today.toISOString().split('T')[0];
+
+        return {
+            sport: randomSport.name,
+            team1: randomTeams[0],
+            team2: randomTeams[1],
+            match_type: randomLeague,
+            date: matchDate,
+            time: null,
+            odds_visible: 'false',
+            visible_odds: null,
+            betting_markets: null,
+            additional_info: `Random ${randomSport.name} match for AI analysis`
+        };
     }
 
     // Real AI Image Analysis Function with OpenAI Vision API
