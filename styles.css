@@ -42,12 +42,13 @@
   
   /* Light Theme Colors */
   --light-bg-primary: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
-  --light-bg-secondary: rgba(255, 255, 255, 0.95);
+  --light-bg-secondary: rgba(255, 255, 255, 0.98);
   --light-bg-card: linear-gradient(145deg, #ffffff, #f8fafc);
-  --light-border: rgba(51, 65, 85, 0.5);
-  --light-text-primary: #111827;
-  --light-text-secondary: #1f2937;
-  --light-text-muted: #374151;
+  --light-border: rgba(30, 41, 59, 0.6);
+  --light-text-primary: #0f172a;
+  --light-text-secondary: #1e293b;
+  --light-text-muted: #334155;
+  --light-accent: #2563eb;
   
   /* Spacing */
   --space-xs: 0.25rem;
@@ -137,6 +138,18 @@ body.light-theme {
   background: var(--light-bg-primary);
 }
 
+/* Light theme text improvements */
+body.light-theme h1,
+body.light-theme h2, 
+body.light-theme h3,
+body.light-theme h4,
+body.light-theme h5,
+body.light-theme h6 {
+  color: var(--light-text-primary);
+  font-weight: 800;
+  text-shadow: none;
+}
+
 /* === TYPOGRAPHY === */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
@@ -159,58 +172,159 @@ p {
 
 body.light-theme p {
   color: var(--light-text-secondary);
-}
-
-body.light-theme .header-subtitle {
-  color: var(--light-text-muted);
   font-weight: 600;
 }
 
+/* Header improvements */
+body.light-theme .header-subtitle {
+  color: var(--light-text-muted);
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+/* Search section improvements */
 body.light-theme .search-input {
   color: var(--light-text-primary);
-  font-weight: 500;
+  font-weight: 700;
+  font-size: 1.1rem;
 }
 
 body.light-theme .search-input::placeholder {
   color: var(--light-text-muted);
-  font-weight: 500;
+  font-weight: 600;
+  opacity: 0.8;
 }
 
+body.light-theme .search-box {
+  background: rgba(255, 255, 255, 0.98);
+  border: 3px solid var(--light-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Category filters improvements */
 body.light-theme .category-filter {
   background: var(--light-bg-card);
-  border-color: var(--light-border);
+  border: 2px solid var(--light-border);
   color: var(--light-text-primary);
-  font-weight: 600;
+  font-weight: 800;
+  text-shadow: none;
 }
 
+body.light-theme .category-filter:hover {
+  background: var(--light-accent);
+  color: white;
+  border-color: var(--light-accent);
+}
+
+/* Sport cards improvements */
 body.light-theme .sport-name {
   color: var(--light-text-primary);
-  font-weight: 700;
+  font-weight: 900;
+  font-size: 1.2rem;
 }
 
 body.light-theme .sport-category {
   color: var(--light-text-muted);
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+/* Prompt section improvements */
+body.light-theme .prompt-title {
+  color: var(--light-accent);
+  font-weight: 900;
 }
 
 body.light-theme .prompt-category {
   color: var(--light-text-muted);
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.1em;
 }
 
+/* Tools section improvements */
 body.light-theme .tool-title {
   color: var(--light-text-primary);
-  font-weight: 800;
+  font-weight: 900;
+  font-size: 1.2rem;
 }
 
 body.light-theme .tool-description {
   color: var(--light-text-muted);
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+/* Guide section improvements */
+body.light-theme .step-title {
+  color: var(--light-text-primary);
+  font-weight: 900;
+  font-size: 1.1rem;
 }
 
 body.light-theme .step-description {
   color: var(--light-text-muted);
-  font-weight: 500;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+body.light-theme .guide-step {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid var(--light-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .guide-step h3 {
+  font-weight: 900;
+}
+
+body.light-theme .quick-guide h2 {
+  color: var(--light-text-primary);
+  font-weight: 900;
+}
+
+/* AI section improvements */
+body.light-theme .ai-section h2,
+body.light-theme .ai-section h3 {
+  color: var(--light-text-primary);
+  font-weight: 900;
+}
+
+body.light-theme .ai-section label {
+  color: var(--light-text-primary);
+  font-weight: 800;
+}
+
+body.light-theme .ai-section p {
+  color: var(--light-text-secondary);
+  font-weight: 700;
+}
+
+/* Button text improvements */
+body.light-theme button {
+  font-weight: 800;
+}
+
+/* Disclaimer section */
+body.light-theme .disclaimer-section h2 {
+  color: #ea580c;
+  font-weight: 900;
+}
+
+body.light-theme .disclaimer-section p {
+  color: var(--light-text-secondary);
+  font-weight: 700;
+}
+
+/* Modal improvements */
+body.light-theme .modal-content h3 {
+  color: var(--light-text-primary);
+  font-weight: 900;
+}
+
+body.light-theme .modal-content label {
+  color: var(--light-text-primary);
+  font-weight: 800;
 }
 
 /* === LAYOUT COMPONENTS === */
@@ -706,11 +820,13 @@ body.light-theme .prompt-category {
 }
 
 body.light-theme .prompt-textarea {
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid var(--light-border);
+  background: rgba(255, 255, 255, 0.98);
+  border: 3px solid var(--light-border);
   color: var(--light-text-primary);
-  font-weight: 600;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.7;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* Copy Feedback */
@@ -977,11 +1093,12 @@ body.light-theme .modal-content {
 }
 
 body.light-theme .modal-input {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   border: 2px solid var(--light-border);
   color: var(--light-text-primary);
-  font-weight: 600;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* Floating Elements */
