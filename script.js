@@ -1141,7 +1141,7 @@ function initializeAIIntegration() {
                     matchData = imageAnalysis.matchData;
                     generateTipsBtn.textContent = 'Generating Professional Tips...';
                 } else {
-                    // No image uploaded: default to ChatGPT random prompt flow; Perplexity requires a query.
+                    // No image uploaded
                     if (config.provider === 'perplexity') {
                         if (!config.searchQuery || !config.searchQuery.trim()) {
                             showAlert('Enter an analysis query for Perplexity (e.g., league/match) or switch to OpenAI.', 'error');
@@ -1162,11 +1162,18 @@ function initializeAIIntegration() {
                         };
                         generateTipsBtn.textContent = 'Searching the web...';
                     } else {
-                        // OpenAI default: random sport/match data
-                        generateTipsBtn.textContent = 'Selecting Random Sport...';
-                        matchData = generateRandomSportMatch();
-                        matchData.fromImage = false;
-                        generateTipsBtn.textContent = 'Generating Professional Tips...';
+                        // OpenAI default: try to fetch REAL fixtures first, then fallback to random
+                        generateTipsBtn.textContent = 'Fetching real fixtures...';
+                        const realFixture = await fetchRealSoccerFixture(config.searchQuery);
+                        if (realFixture) {
+                            matchData = realFixture;
+                            generateTipsBtn.textContent = 'Generating Professional Tips...';
+                        } else {
+                            generateTipsBtn.textContent = 'Selecting Random Sport...';
+                            matchData = generateRandomSportMatch();
+                            matchData.fromImage = false;
+                            generateTipsBtn.textContent = 'Generating Professional Tips...';
+                        }
                     }
                 }
 
@@ -1190,6 +1197,57 @@ function initializeAIIntegration() {
                 generateTipsBtn.disabled = false;
             }
         });
+    }
+
+    // Fetch real soccer fixtures for today from TheSportsDB (no API key needed)
+    async function fetchRealSoccerFixture(query) {
+        try {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const dateStr = `${yyyy}-${mm}-${dd}`;
+            const url = `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${dateStr}&s=Soccer`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            const events = Array.isArray(data?.events) ? data.events : [];
+            if (!events.length) return null;
+
+            let candidates = events;
+            const q = (query || '').trim().toLowerCase();
+            if (q) {
+                const vsMatch = q.match(/(.+?)\s+(?:vs|v|\-|–)\s+(.+)/i);
+                const teamA = vsMatch ? vsMatch[1].trim().toLowerCase() : null;
+                const teamB = vsMatch ? vsMatch[2].trim().toLowerCase() : null;
+                candidates = events.filter(ev => {
+                    const h = (ev.strHomeTeam || '').toLowerCase();
+                    const a = (ev.strAwayTeam || '').toLowerCase();
+                    const league = (ev.strLeague || '').toLowerCase();
+                    if (teamA && teamB) return (h.includes(teamA) && a.includes(teamB)) || (h.includes(teamB) && a.includes(teamA));
+                    return q && (h.includes(q) || a.includes(q) || league.includes(q));
+                });
+                if (!candidates.length) candidates = events;
+            }
+
+            const event = candidates[Math.floor(Math.random() * candidates.length)];
+            return {
+                sport: 'Football',
+                team1: event.strHomeTeam,
+                team2: event.strAwayTeam,
+                match_type: event.strLeague,
+                date: event.dateEvent || dateStr,
+                time: event.strTime || null,
+                odds_visible: 'false',
+                visible_odds: null,
+                betting_markets: null,
+                additional_info: `Real fixture from TheSportsDB (id: ${event.idEvent})`,
+                fromImage: false
+            };
+        } catch (e) {
+            console.error('fetchRealSoccerFixture error:', e);
+            return null;
+        }
     }
 
     // Generate random sport match data
