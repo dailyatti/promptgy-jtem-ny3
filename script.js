@@ -1207,43 +1207,94 @@ function initializeAIIntegration() {
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
             const dateStr = `${yyyy}-${mm}-${dd}`;
-            const url = `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${dateStr}&s=Soccer`;
-            const res = await fetch(url);
-            if (!res.ok) return null;
-            const data = await res.json();
-            const events = Array.isArray(data?.events) ? data.events : [];
-            if (!events.length) return null;
+            // 1) Try TheSportsDB (free demo may return archived 2014 data) and discard if not today/this year
+            try {
+                const url = `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${dateStr}&s=Soccer`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    const events = Array.isArray(data?.events) ? data.events : [];
+                    // Only keep events with the same date (and reasonable year)
+                    const filtered = events.filter(ev => (ev.dateEvent || '').startsWith(dateStr));
+                    if (filtered.length) {
+                        let candidates = filtered;
+                        const q = (query || '').trim().toLowerCase();
+                        if (q) {
+                            const vsMatch = q.match(/(.+?)\s+(?:vs|v|\-|–)\s+(.+)/i);
+                            const teamA = vsMatch ? vsMatch[1].trim().toLowerCase() : null;
+                            const teamB = vsMatch ? vsMatch[2].trim().toLowerCase() : null;
+                            candidates = filtered.filter(ev => {
+                                const h = (ev.strHomeTeam || '').toLowerCase();
+                                const a = (ev.strAwayTeam || '').toLowerCase();
+                                const league = (ev.strLeague || '').toLowerCase();
+                                if (teamA && teamB) return (h.includes(teamA) && a.includes(teamB)) || (h.includes(teamB) && a.includes(teamA));
+                                return q && (h.includes(q) || a.includes(q) || league.includes(q));
+                            });
+                            if (!candidates.length) candidates = filtered;
+                        }
+                        const event = candidates[Math.floor(Math.random() * candidates.length)];
+                        return {
+                            sport: 'Football',
+                            team1: event.strHomeTeam,
+                            team2: event.strAwayTeam,
+                            match_type: event.strLeague,
+                            date: event.dateEvent || dateStr,
+                            time: event.strTime || null,
+                            odds_visible: 'false',
+                            visible_odds: null,
+                            betting_markets: null,
+                            additional_info: `Real fixture from TheSportsDB (id: ${event.idEvent})`,
+                            fromImage: false
+                        };
+                    }
+                }
+            } catch (_) { /* swallow and try next source */ }
 
-            let candidates = events;
-            const q = (query || '').trim().toLowerCase();
-            if (q) {
-                const vsMatch = q.match(/(.+?)\s+(?:vs|v|\-|–)\s+(.+)/i);
-                const teamA = vsMatch ? vsMatch[1].trim().toLowerCase() : null;
-                const teamB = vsMatch ? vsMatch[2].trim().toLowerCase() : null;
-                candidates = events.filter(ev => {
-                    const h = (ev.strHomeTeam || '').toLowerCase();
-                    const a = (ev.strAwayTeam || '').toLowerCase();
-                    const league = (ev.strLeague || '').toLowerCase();
-                    if (teamA && teamB) return (h.includes(teamA) && a.includes(teamB)) || (h.includes(teamB) && a.includes(teamA));
-                    return q && (h.includes(q) || a.includes(q) || league.includes(q));
-                });
-                if (!candidates.length) candidates = events;
+            // 2) Fallback: Scorebat free feed (has CORS), use today's entries
+            try {
+                const res2 = await fetch('https://www.scorebat.com/video-api/v3/');
+                if (res2.ok) {
+                    const data2 = await res2.json();
+                    const items = Array.isArray(data2?.response) ? data2.response : [];
+                    const start = new Date(`${dateStr}T00:00:00Z`).getTime();
+                    const end = new Date(`${dateStr}T23:59:59Z`).getTime();
+                    let candidates = items.filter(it => {
+                        const t = Date.parse(it.date);
+                        return !Number.isNaN(t) && t >= start && t <= end;
+                    });
+                    if (!candidates.length) return null;
+                    const q = (query || '').trim().toLowerCase();
+                    if (q) {
+                        candidates = candidates.filter(it => {
+                            const title = (it.title || '').toLowerCase();
+                            const comp = (it.competition || '').toLowerCase();
+                            return title.includes(q) || comp.includes(q);
+                        }) || candidates;
+                        if (!candidates.length) candidates = items;
+                    }
+                    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+                    const parts = (pick.title || '').split(' - ');
+                    const team1 = parts[0] || 'Home Team';
+                    const team2 = parts[1] || 'Away Team';
+                    return {
+                        sport: 'Football',
+                        team1,
+                        team2,
+                        match_type: pick.competition || 'Football',
+                        date: dateStr,
+                        time: null,
+                        odds_visible: 'false',
+                        visible_odds: null,
+                        betting_markets: null,
+                        additional_info: 'Real fixture from Scorebat feed',
+                        fromImage: false
+                    };
+                }
+            } catch (e2) {
+                console.error('Scorebat fetch error:', e2);
             }
 
-            const event = candidates[Math.floor(Math.random() * candidates.length)];
-            return {
-                sport: 'Football',
-                team1: event.strHomeTeam,
-                team2: event.strAwayTeam,
-                match_type: event.strLeague,
-                date: event.dateEvent || dateStr,
-                time: event.strTime || null,
-                odds_visible: 'false',
-                visible_odds: null,
-                betting_markets: null,
-                additional_info: `Real fixture from TheSportsDB (id: ${event.idEvent})`,
-                fromImage: false
-            };
+            return null;
         } catch (e) {
             console.error('fetchRealSoccerFixture error:', e);
             return null;
