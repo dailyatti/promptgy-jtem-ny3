@@ -1679,7 +1679,10 @@ Respond JSON only (no markdown):
             `;
         }).join('');
 
-        tipContainer.innerHTML = matchInfoHtml + tipsHtml;
+        let html = matchInfoHtml + tipsHtml;
+        // Hide raw 'null' strings when teams are unknown (query-only flow)
+        try { html = html.replaceAll('null', ''); } catch (_) { html = html.split('null').join(''); }
+        tipContainer.innerHTML = html;
     }
 
     // Copy tip to clipboard
