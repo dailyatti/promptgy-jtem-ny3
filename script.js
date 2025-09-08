@@ -1043,6 +1043,8 @@ function initializeAIIntegration() {
     const saveConfigBtn = document.getElementById('save-ai-config');
     const generateTipsBtn = document.getElementById('generate-tips');
     const aiSearchQuery = document.getElementById('ai-search-query');
+    const aiOpenaiModel = document.getElementById('ai-openai-model');
+    const aiPerplexityKey = document.getElementById('ai-perplexity-key');
 
     // Load saved configuration
     const savedConfig = localStorage.getItem('aiConfig');
@@ -1051,6 +1053,8 @@ function initializeAIIntegration() {
         if (aiProvider) aiProvider.value = config.provider || '';
         if (aiApiKey) aiApiKey.value = config.apiKey || '';
         if (aiSearchQuery) aiSearchQuery.value = config.searchQuery || '';
+        if (aiOpenaiModel) aiOpenaiModel.value = config.openaiModel || '';
+        if (aiPerplexityKey) aiPerplexityKey.value = config.perplexityKey || '';
         updateGenerateButton();
     }
 
@@ -1060,7 +1064,9 @@ function initializeAIIntegration() {
             const config = {
                 provider: aiProvider?.value || '',
                 apiKey: aiApiKey?.value || '',
-                searchQuery: aiSearchQuery?.value || ''
+                searchQuery: aiSearchQuery?.value || '',
+                openaiModel: aiOpenaiModel?.value || '',
+                perplexityKey: aiPerplexityKey?.value || ''
             };
             localStorage.setItem('aiConfig', JSON.stringify(config));
             showAlert('Configuration saved successfully!', 'success');
@@ -1095,7 +1101,7 @@ function initializeAIIntegration() {
         });
     }
 
-    // Generate tips with AI image recognition or random sport
+    // Generate tips with optional image or web search
     if (generateTipsBtn) {
         generateTipsBtn.addEventListener('click', async () => {
             const config = JSON.parse(localStorage.getItem('aiConfig') || '{}');
@@ -1124,33 +1130,27 @@ function initializeAIIntegration() {
                     matchData = imageAnalysis.matchData;
                     generateTipsBtn.textContent = 'Generating Professional Tips...';
                 } else {
-                    // No image uploaded
-                    if (config.provider === 'chatgpt') {
-                        showAlert('To avoid hallucinations, upload a match image or switch to Perplexity (Web Search).', 'error');
+                    // No image uploaded: allow query flow for both providers
+                    if (!config.searchQuery || !config.searchQuery.trim()) {
+                        showAlert('Enter an analysis query (e.g., league/match) or upload an image.', 'error');
                         return;
                     }
-                    if (config.provider === 'perplexity') {
-                        if (!config.searchQuery || !config.searchQuery.trim()) {
-                            showAlert('Enter a search query for Perplexity (e.g., league or match) or upload an image.', 'error');
-                            return;
-                        }
-                        matchData = {
-                            sport: 'Football',
-                            team1: null,
-                            team2: null,
-                            match_type: config.searchQuery,
-                            date: new Date().toISOString().split('T')[0],
-                            time: null,
-                            odds_visible: 'false',
-                            visible_odds: null,
-                            betting_markets: null,
-                            additional_info: `Web search query: ${config.searchQuery}`
-                        };
-                        generateTipsBtn.textContent = 'Searching the web...';
-                    }
+                    matchData = {
+                        sport: 'Football',
+                        team1: null,
+                        team2: null,
+                        match_type: config.searchQuery,
+                        date: new Date().toISOString().split('T')[0],
+                        time: null,
+                        odds_visible: 'false',
+                        visible_odds: null,
+                        betting_markets: null,
+                        additional_info: `Query: ${config.searchQuery}`
+                    };
+                    generateTipsBtn.textContent = (config.provider === 'perplexity' || config.perplexityKey) ? 'Searching the web...' : 'Generating (no web evidence)...';
                 }
 
-                // Generate tips based on match data (from image or web search)
+                // Generate tips based on image or query
                 const tipsResult = await generateRealTips(matchData, config);
                 if (tipsResult && tipsResult.insufficient_data) {
                     showAlert(tipsResult.reason || 'Insufficient verified data to generate tips.', 'error');
@@ -1384,6 +1384,31 @@ If unclear, return:
         }
     }
 
+    // Helper: Perplexity search to collect evidence (snippets + sources)
+    async function searchWithPerplexity(query, perplexityKey) {
+        const prompt = `Return grounded, current info for sports betting analysis with citations. JSON only.`;
+        const response = await fetch('https://api.perplexity.ai/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${perplexityKey}`
+            },
+            body: JSON.stringify({
+                model: 'sonar-pro',
+                temperature: 0.2,
+                messages: [
+                    { role: 'system', content: 'Cite sources. If evidence is weak, set insufficient_data: true.' },
+                    { role: 'user', content: `User query: ${query}\n\nRespond JSON only:\n{\n  "snippets": ["evidence"],\n  "sources": ["url"],\n  "insufficient_data": false,\n  "reason": ""\n}` }
+                ]
+            })
+        });
+        if (!response.ok) throw new Error(`Perplexity API error: ${response.status}`);
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content || '';
+        const clean = content.replace(/```json\n?|\n?```/g, '').trim();
+        try { return JSON.parse(clean); } catch { return { snippets: [], sources: [], insufficient_data: true, reason: 'Invalid JSON from web search' }; }
+    }
+
     // Generate Real Tips Function using grounded providers
     async function generateRealTips(matchData, config) {
         // Perplexity (web search) branch
@@ -1456,7 +1481,7 @@ User query: ${query}${matchData?.team1 && matchData?.team2 ? ` | Match: ${matchD
             }
         }
 
-        // OpenAI (image-grounded) branch
+        // OpenAI (image-or-evidence grounded) branch
         if (config.provider === 'chatgpt') {
             if (!config.apiKey) {
                 throw new Error('OpenAI ChatGPT API key required for tip generation');
@@ -1469,32 +1494,50 @@ User query: ${query}${matchData?.team1 && matchData?.team2 ? ` | Match: ${matchD
                 throw new Error(`No prompt available for sport: ${matchData.sport}`);
             }
 
-            // Use the specific match prompt if available, otherwise use the general prompt
-            let basePrompt = sportData.specificMatchPrompt || sportData.prompt;
-            
-            // Replace placeholders with actual match data
-            basePrompt = basePrompt.replace('{MATCH}', `${matchData.team1} vs ${matchData.team2}`);
-            basePrompt = basePrompt.replace('{DATE}', matchData.date || 'Today');
-            
-            // Add visible odds information if available
-            const oddsInfo = matchData.odds_visible === 'true' && matchData.visible_odds 
-                ? `\n\nVISIBLE ODDS FROM IMAGE: ${matchData.visible_odds}\nVISIBLE BETTING MARKETS: ${matchData.betting_markets || 'Standard markets'}`
-                : '';
-            
-            const finalPrompt = `${basePrompt}${oddsInfo}
+            let finalPrompt;
+            let usingEvidence = false;
+            let evidenceSources = [];
+
+            if (matchData.team1 && matchData.team2) {
+                // Image-grounded flow
+                let basePrompt = sportData.specificMatchPrompt || sportData.prompt;
+                basePrompt = basePrompt.replace('{MATCH}', `${matchData.team1} vs ${matchData.team2}`);
+                basePrompt = basePrompt.replace('{DATE}', matchData.date || 'Today');
+                const oddsInfo = matchData.odds_visible === 'true' && matchData.visible_odds 
+                    ? `\n\nVISIBLE ODDS FROM IMAGE: ${matchData.visible_odds}\nVISIBLE BETTING MARKETS: ${matchData.betting_markets || 'Standard markets'}`
+                    : '';
+                finalPrompt = `${basePrompt}${oddsInfo}
 
 STRICT GROUNDEDNESS:
 - Use ONLY the data detected from the image above. Do not fabricate teams, odds, markets, or dates.
 - If odds/markets are not clearly visible, return insufficient_data.
 
-OUTPUT JSON ONLY (no markdown):
+Respond JSON only (no markdown):
 {
-  "tips": [
-    { "description": "", "odds": "", "probability": "", "ev": "", "confidence": "", "reasoning": "" }
-  ],
+  "tips": [ { "description": "", "odds": "", "probability": "", "ev": "", "confidence": "", "reasoning": "" } ],
   "insufficient_data": false,
   "reason": ""
 }`;
+            } else {
+                // Query flow without image: optional web evidence via Perplexity if key present
+                if (config.perplexityKey && config.searchQuery) {
+                    try {
+                        const evidence = await searchWithPerplexity(config.searchQuery, config.perplexityKey);
+                        const snippets = Array.isArray(evidence.snippets) ? evidence.snippets.slice(0,6) : [];
+                        evidenceSources = Array.isArray(evidence.sources) ? evidence.sources : [];
+                        if (snippets.length > 0) {
+                            usingEvidence = true;
+                            finalPrompt = `EVIDENCE (cited):\n- ${snippets.join('\n- ')}\n\nSOURCES:\n- ${evidenceSources.join('\n- ')}\n\nInstructions: Create up to 3 value bets (>1.90) strictly grounded in the evidence above. If unclear, return insufficient_data.\n\nJSON only:\n{\n  "tips": [ { "description": "", "odds": "", "probability": "", "ev": "", "confidence": "", "reasoning": "", "sources": [] } ],\n  "insufficient_data": false,\n  "reason": ""\n}`;
+                        }
+                    } catch (e) {
+                        // Fall through to no-evidence mode
+                    }
+                }
+                if (!finalPrompt) {
+                    // No evidence available -> conservative mode
+                    finalPrompt = `No external evidence available. Do not fabricate fixtures or odds.\nIf you cannot verify value bets >1.90 from reliable sources, return insufficient_data with a brief reason.\n\nJSON only:\n{\n  "tips": [ { "description": "", "odds": "", "probability": "", "ev": "", "confidence": "", "reasoning": "" } ],\n  "insufficient_data": true,\n  "reason": "No grounded data"\n}`;
+                }
+            }
 
             try {
                 const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -1504,7 +1547,7 @@ OUTPUT JSON ONLY (no markdown):
                         'Authorization': `Bearer ${config.apiKey}`
                     },
                     body: JSON.stringify({
-                        model: "gpt-4o",
+                        model: (config.openaiModel && config.openaiModel.trim()) ? config.openaiModel.trim() : "gpt-4o",
                         messages: [
                             {
                                 role: "user",
@@ -1512,7 +1555,7 @@ OUTPUT JSON ONLY (no markdown):
                             }
                         ],
                         max_tokens: 1200,
-                        temperature: 0.1
+                        temperature: usingEvidence ? 0.2 : 0.1
                     })
                 });
 
@@ -1537,6 +1580,12 @@ OUTPUT JSON ONLY (no markdown):
                     throw new Error("AI tip response was not valid JSON format");
                 }
                 
+                if (usingEvidence && tipsResult && Array.isArray(tipsResult.tips)) {
+                    tipsResult.tips = tipsResult.tips.map(t => ({
+                        ...t,
+                        sources: Array.isArray(t.sources) && t.sources.length ? t.sources : evidenceSources
+                    }));
+                }
                 return tipsResult;
                 
             } catch (error) {
