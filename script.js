@@ -1056,6 +1056,11 @@ function initializeAIIntegration() {
         if (aiOpenaiModel) aiOpenaiModel.value = config.openaiModel || '';
         if (aiPerplexityKey) aiPerplexityKey.value = config.perplexityKey || '';
         updateGenerateButton();
+    } else {
+        // Defaults: use OpenAI (GPT-5) by default; user still needs to enter API key
+        if (aiProvider) aiProvider.value = 'chatgpt';
+        if (aiOpenaiModel) aiOpenaiModel.value = 'gpt-5';
+        updateGenerateButton();
     }
 
     // Save configuration
@@ -1078,9 +1083,9 @@ function initializeAIIntegration() {
     if (testConnectionBtn) {
         testConnectionBtn.addEventListener('click', async () => {
             const provider = aiProvider?.value;
-            const apiKey = aiApiKey?.value;
+            const key = provider === 'perplexity' ? (aiPerplexityKey?.value) : (aiApiKey?.value);
 
-            if (!provider || !apiKey) {
+            if (!provider || !key) {
                 showAlert('Please select a provider and enter API key', 'error');
                 return;
             }
@@ -1105,6 +1110,12 @@ function initializeAIIntegration() {
     if (generateTipsBtn) {
         generateTipsBtn.addEventListener('click', async () => {
             const config = JSON.parse(localStorage.getItem('aiConfig') || '{}');
+            // Merge in latest UI values so user needn't hit Save every time
+            if (aiProvider?.value) config.provider = aiProvider.value;
+            if (aiApiKey?.value) config.apiKey = aiApiKey.value;
+            if (aiSearchQuery?.value) config.searchQuery = aiSearchQuery.value;
+            if (aiOpenaiModel?.value) config.openaiModel = aiOpenaiModel.value;
+            if (aiPerplexityKey?.value) config.perplexityKey = aiPerplexityKey.value;
             const images = document.querySelectorAll('#uploaded-images img');
 
             if (!config.provider || !config.apiKey) {
@@ -1130,24 +1141,33 @@ function initializeAIIntegration() {
                     matchData = imageAnalysis.matchData;
                     generateTipsBtn.textContent = 'Generating Professional Tips...';
                 } else {
-                    // No image uploaded: allow query flow for both providers
-                    if (!config.searchQuery || !config.searchQuery.trim()) {
-                        showAlert('Enter an analysis query (e.g., league/match) or upload an image.', 'error');
-                        return;
+                    // No image uploaded: default to ChatGPT random prompt flow; Perplexity requires a query.
+                    if (config.provider === 'perplexity') {
+                        if (!config.searchQuery || !config.searchQuery.trim()) {
+                            showAlert('Enter an analysis query for Perplexity (e.g., league/match) or switch to OpenAI.', 'error');
+                            return;
+                        }
+                        matchData = {
+                            sport: 'Football',
+                            team1: null,
+                            team2: null,
+                            match_type: config.searchQuery,
+                            date: new Date().toISOString().split('T')[0],
+                            time: null,
+                            odds_visible: 'false',
+                            visible_odds: null,
+                            betting_markets: null,
+                            additional_info: `Query: ${config.searchQuery}`,
+                            fromImage: false
+                        };
+                        generateTipsBtn.textContent = 'Searching the web...';
+                    } else {
+                        // OpenAI default: random sport/match data
+                        generateTipsBtn.textContent = 'Selecting Random Sport...';
+                        matchData = generateRandomSportMatch();
+                        matchData.fromImage = false;
+                        generateTipsBtn.textContent = 'Generating Professional Tips...';
                     }
-                    matchData = {
-                        sport: 'Football',
-                        team1: null,
-                        team2: null,
-                        match_type: config.searchQuery,
-                        date: new Date().toISOString().split('T')[0],
-                        time: null,
-                        odds_visible: 'false',
-                        visible_odds: null,
-                        betting_markets: null,
-                        additional_info: `Query: ${config.searchQuery}`
-                    };
-                    generateTipsBtn.textContent = (config.provider === 'perplexity' || config.perplexityKey) ? 'Searching the web...' : 'Generating (no web evidence)...';
                 }
 
                 // Generate tips based on image or query
@@ -1260,7 +1280,8 @@ function initializeAIIntegration() {
             odds_visible: 'false',
             visible_odds: null,
             betting_markets: null,
-            additional_info: `Random ${randomSport.name} match for AI analysis`
+            additional_info: `Random ${randomSport.name} match for AI analysis`,
+            fromImage: false
         };
     }
 
@@ -1371,7 +1392,8 @@ If unclear, return:
                     odds_visible: analysisResult.odds_visible,
                     visible_odds: analysisResult.visible_odds,
                     betting_markets: analysisResult.betting_markets,
-                    additional_info: analysisResult.additional_info
+                    additional_info: analysisResult.additional_info,
+                    fromImage: true
                 }
             };
             
@@ -1448,7 +1470,7 @@ User query: ${query}${matchData?.team1 && matchData?.team2 ? ` | Match: ${matchD
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${config.apiKey}`
+                        'Authorization': `Bearer ${config.perplexityKey || config.apiKey}`
                     },
                     body: JSON.stringify({
                         model: 'sonar-pro',
@@ -1498,7 +1520,7 @@ User query: ${query}${matchData?.team1 && matchData?.team2 ? ` | Match: ${matchD
             let usingEvidence = false;
             let evidenceSources = [];
 
-            if (matchData.team1 && matchData.team2) {
+            if (matchData.fromImage === true) {
                 // Image-grounded flow
                 let basePrompt = sportData.specificMatchPrompt || sportData.prompt;
                 basePrompt = basePrompt.replace('{MATCH}', `${matchData.team1} vs ${matchData.team2}`);
@@ -1534,8 +1556,26 @@ Respond JSON only (no markdown):
                     }
                 }
                 if (!finalPrompt) {
-                    // No evidence available -> conservative mode
-                    finalPrompt = `No external evidence available. Do not fabricate fixtures or odds.\nIf you cannot verify value bets >1.90 from reliable sources, return insufficient_data with a brief reason.\n\nJSON only:\n{\n  "tips": [ { "description": "", "odds": "", "probability": "", "ev": "", "confidence": "", "reasoning": "" } ],\n  "insufficient_data": true,\n  "reason": "No grounded data"\n}`;
+                    // No evidence available -> run standard expert prompt on the selected/random matchup
+                    let basePrompt = sportData.specificMatchPrompt || sportData.prompt;
+                    basePrompt = basePrompt.replace('{MATCH}', `${matchData.team1 || 'Team A'} vs ${matchData.team2 || 'Team B'}`);
+                    basePrompt = basePrompt.replace('{DATE}', matchData.date || 'Today');
+                    const oddsInfo = '';
+                    finalPrompt = `${basePrompt}${oddsInfo}
+
+IMPORTANT: Generate exactly 3 professional betting tips${matchData.team1 && matchData.team2 ? ` for ${matchData.team1} vs ${matchData.team2}` : ''} in ${matchData.match_type || 'the chosen competition'}.
+${matchData.additional_info ? 'Additional context: ' + matchData.additional_info : ''}
+
+RESPOND WITH ONLY THIS JSON FORMAT (no markdown, no extra text):
+{
+  "tips": [
+    { "description": "", "odds": "", "probability": "", "ev": "", "confidence": "", "reasoning": "" },
+    { "description": "", "odds": "", "probability": "", "ev": "", "confidence": "", "reasoning": "" },
+    { "description": "", "odds": "", "probability": "", "ev": "", "confidence": "", "reasoning": "" }
+  ],
+  "insufficient_data": false,
+  "reason": ""
+}`;
                 }
             }
 
@@ -1695,7 +1735,8 @@ Respond JSON only (no markdown):
     function updateGenerateButton() {
         const config = JSON.parse(localStorage.getItem('aiConfig') || '{}');
         if (generateTipsBtn) {
-            generateTipsBtn.disabled = !config.provider || !config.apiKey;
+            const needsKey = config.provider === 'perplexity' ? (config.perplexityKey) : (config.apiKey);
+            generateTipsBtn.disabled = !config.provider || !needsKey;
         }
     }
 
