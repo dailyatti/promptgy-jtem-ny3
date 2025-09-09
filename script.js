@@ -1044,7 +1044,6 @@ function initializeAIIntegration() {
     const generateTipsBtn = document.getElementById('generate-tips');
     const aiSearchQuery = document.getElementById('ai-search-query');
     const aiOpenaiModel = document.getElementById('ai-openai-model');
-    const aiPerplexityKey = document.getElementById('ai-perplexity-key');
 
     // Load saved configuration
     const savedConfig = localStorage.getItem('aiConfig');
@@ -1054,7 +1053,6 @@ function initializeAIIntegration() {
         if (aiApiKey) aiApiKey.value = config.apiKey || '';
         if (aiSearchQuery) aiSearchQuery.value = config.searchQuery || '';
         if (aiOpenaiModel) aiOpenaiModel.value = config.openaiModel || '';
-        if (aiPerplexityKey) aiPerplexityKey.value = config.perplexityKey || '';
         updateGenerateButton();
     } else {
         // Defaults: use OpenAI (GPT-5) by default; user still needs to enter API key
@@ -1070,8 +1068,7 @@ function initializeAIIntegration() {
                 provider: aiProvider?.value || '',
                 apiKey: aiApiKey?.value || '',
                 searchQuery: aiSearchQuery?.value || '',
-                openaiModel: aiOpenaiModel?.value || '',
-                perplexityKey: aiPerplexityKey?.value || ''
+                openaiModel: aiOpenaiModel?.value || ''
             };
             localStorage.setItem('aiConfig', JSON.stringify(config));
             showAlert('Configuration saved successfully!', 'success');
@@ -1082,11 +1079,10 @@ function initializeAIIntegration() {
     // Test connection
     if (testConnectionBtn) {
         testConnectionBtn.addEventListener('click', async () => {
-            const provider = aiProvider?.value;
-            const key = provider === 'perplexity' ? (aiPerplexityKey?.value) : (aiApiKey?.value);
+            const key = aiApiKey?.value;
 
-            if (!provider || !key) {
-                showAlert('Please select a provider and enter API key', 'error');
+            if (!key) {
+                showAlert('Please enter your OpenAI API key', 'error');
                 return;
             }
 
@@ -1115,11 +1111,10 @@ function initializeAIIntegration() {
             if (aiApiKey?.value) config.apiKey = aiApiKey.value;
             if (aiSearchQuery?.value) config.searchQuery = aiSearchQuery.value;
             if (aiOpenaiModel?.value) config.openaiModel = aiOpenaiModel.value;
-            if (aiPerplexityKey?.value) config.perplexityKey = aiPerplexityKey.value;
             const images = document.querySelectorAll('#uploaded-images img');
 
-            if (!config.provider || !config.apiKey) {
-                showAlert('Please configure AI provider first', 'error');
+            if (!config.apiKey) {
+                showAlert('Please enter your OpenAI API key', 'error');
                 return;
             }
 
@@ -1141,39 +1136,17 @@ function initializeAIIntegration() {
                     matchData = imageAnalysis.matchData;
                     generateTipsBtn.textContent = 'Generating Professional Tips...';
                 } else {
-                    // No image uploaded
-                    if (config.provider === 'perplexity') {
-                        if (!config.searchQuery || !config.searchQuery.trim()) {
-                            showAlert('Enter an analysis query for Perplexity (e.g., league/match) or switch to OpenAI.', 'error');
-                            return;
-                        }
-                        matchData = {
-                            sport: 'Football',
-                            team1: null,
-                            team2: null,
-                            match_type: config.searchQuery,
-                            date: new Date().toISOString().split('T')[0],
-                            time: null,
-                            odds_visible: 'false',
-                            visible_odds: null,
-                            betting_markets: null,
-                            additional_info: `Query: ${config.searchQuery}`,
-                            fromImage: false
-                        };
-                        generateTipsBtn.textContent = 'Searching the web...';
+                    // No image uploaded -> try to fetch REAL fixtures first, then fallback to random
+                    generateTipsBtn.textContent = 'Fetching real fixtures...';
+                    const realFixture = await fetchRealSoccerFixture(config.searchQuery);
+                    if (realFixture) {
+                        matchData = realFixture;
+                        generateTipsBtn.textContent = 'Generating Professional Tips...';
                     } else {
-                        // OpenAI default: try to fetch REAL fixtures first, then fallback to random
-                        generateTipsBtn.textContent = 'Fetching real fixtures...';
-                        const realFixture = await fetchRealSoccerFixture(config.searchQuery);
-                        if (realFixture) {
-                            matchData = realFixture;
-                            generateTipsBtn.textContent = 'Generating Professional Tips...';
-                        } else {
-                            generateTipsBtn.textContent = 'Selecting Random Sport...';
-                            matchData = generateRandomSportMatch();
-                            matchData.fromImage = false;
-                            generateTipsBtn.textContent = 'Generating Professional Tips...';
-                        }
+                        generateTipsBtn.textContent = 'Selecting Random Sport...';
+                        matchData = generateRandomSportMatch();
+                        matchData.fromImage = false;
+                        generateTipsBtn.textContent = 'Generating Professional Tips...';
                     }
                 }
 
@@ -1515,105 +1488,10 @@ If unclear, return:
         }
     }
 
-    // Helper: Perplexity search to collect evidence (snippets + sources)
-    async function searchWithPerplexity(query, perplexityKey) {
-        const prompt = `Return grounded, current info for sports betting analysis with citations. JSON only.`;
-        const response = await fetch('https://api.perplexity.ai/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${perplexityKey}`
-            },
-            body: JSON.stringify({
-                model: 'sonar-pro',
-                temperature: 0.2,
-                messages: [
-                    { role: 'system', content: 'Cite sources. If evidence is weak, set insufficient_data: true.' },
-                    { role: 'user', content: `User query: ${query}\n\nRespond JSON only:\n{\n  "snippets": ["evidence"],\n  "sources": ["url"],\n  "insufficient_data": false,\n  "reason": ""\n}` }
-                ]
-            })
-        });
-        if (!response.ok) throw new Error(`Perplexity API error: ${response.status}`);
-        const data = await response.json();
-        const content = data.choices?.[0]?.message?.content || '';
-        const clean = content.replace(/```json\n?|\n?```/g, '').trim();
-        try { return JSON.parse(clean); } catch { return { snippets: [], sources: [], insufficient_data: true, reason: 'Invalid JSON from web search' }; }
-    }
-
-    // Generate Real Tips Function using grounded providers
+    // Generate Real Tips Function using OpenAI
     async function generateRealTips(matchData, config) {
-        // Perplexity (web search) branch
-        if (config.provider === 'perplexity') {
-            const query = (config.searchQuery && config.searchQuery.trim())
-                ? config.searchQuery.trim()
-                : `${matchData?.team1 && matchData?.team2 ? `${matchData.team1} vs ${matchData.team2}` : 'today value bets'} ${matchData?.match_type || ''}`.trim();
-
-            const prompt = `You are an expert sports betting analyst. Use web results to find verifiable, current tips.
-
-STRICT REQUIREMENTS:
-- Only use information you can verify from cited sources (bookmakers, odds portals, reputable previews). No guessing.
-- If you cannot verify odds > 1.90 (or equivalent) and the specific market, return insufficient_data: true with a brief reason.
-- Prefer tips with clear edge and provide 1-3 items max.
-
-Return ONLY valid JSON (no markdown) with:
-{
-  "tips": [
-    {
-      "description": "",
-      "odds": "",
-      "probability": "",
-      "ev": "",
-      "confidence": "",
-      "reasoning": "",
-      "sources": ["url1", "url2"]
-    }
-  ],
-  "insufficient_data": false,
-  "reason": ""
-}
-
-User query: ${query}${matchData?.team1 && matchData?.team2 ? ` | Match: ${matchData.team1} vs ${matchData.team2} | Date: ${matchData?.date || 'today'}` : ''}`;
-
-            try {
-                const response = await fetch('https://api.perplexity.ai/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${config.perplexityKey || config.apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: 'sonar-pro',
-                        temperature: 0.2,
-                        messages: [
-                            { role: 'system', content: 'You must ground answers in cited sources. If not enough evidence, return insufficient_data: true.' },
-                            { role: 'user', content: prompt }
-                        ]
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Perplexity API error: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const content = data.choices?.[0]?.message?.content || '';
-                console.log('Perplexity tip generation response:', content);
-                let parsed;
-                try {
-                    const clean = content.replace(/```json\n?|\n?```/g, '').trim();
-                    parsed = JSON.parse(clean);
-                } catch (e) {
-                    throw new Error('Perplexity response not valid JSON');
-                }
-                return parsed;
-            } catch (error) {
-                console.error('Perplexity tip generation error:', error);
-                throw new Error(`Failed to generate tips (Perplexity): ${error.message}`);
-            }
-        }
-
-        // OpenAI (image-or-evidence grounded) branch
-        if (config.provider === 'chatgpt') {
+        // OpenAI (image-or-query) branch
+        {
             if (!config.apiKey) {
                 throw new Error('OpenAI ChatGPT API key required for tip generation');
             }
@@ -1650,20 +1528,6 @@ Respond JSON only (no markdown):
   "reason": ""
 }`;
             } else {
-                // Query flow without image: optional web evidence via Perplexity if key present
-                if (config.perplexityKey && config.searchQuery) {
-                    try {
-                        const evidence = await searchWithPerplexity(config.searchQuery, config.perplexityKey);
-                        const snippets = Array.isArray(evidence.snippets) ? evidence.snippets.slice(0,6) : [];
-                        evidenceSources = Array.isArray(evidence.sources) ? evidence.sources : [];
-                        if (snippets.length > 0) {
-                            usingEvidence = true;
-                            finalPrompt = `EVIDENCE (cited):\n- ${snippets.join('\n- ')}\n\nSOURCES:\n- ${evidenceSources.join('\n- ')}\n\nInstructions: Create up to 3 value bets (>1.90) strictly grounded in the evidence above. If unclear, return insufficient_data.\n\nJSON only:\n{\n  "tips": [ { "description": "", "odds": "", "probability": "", "ev": "", "confidence": "", "reasoning": "", "sources": [] } ],\n  "insufficient_data": false,\n  "reason": ""\n}`;
-                        }
-                    } catch (e) {
-                        // Fall through to no-evidence mode
-                    }
-                }
                 if (!finalPrompt) {
                     // No evidence available -> run standard expert prompt on the selected/random matchup
                     let basePrompt = sportData.specificMatchPrompt || sportData.prompt;
@@ -1844,8 +1708,8 @@ RESPOND WITH ONLY THIS JSON FORMAT (no markdown, no extra text):
     function updateGenerateButton() {
         const config = JSON.parse(localStorage.getItem('aiConfig') || '{}');
         if (generateTipsBtn) {
-            const needsKey = config.provider === 'perplexity' ? (config.perplexityKey) : (config.apiKey);
-            generateTipsBtn.disabled = !config.provider || !needsKey;
+            const needsKey = config.apiKey;
+            generateTipsBtn.disabled = !needsKey;
         }
     }
 

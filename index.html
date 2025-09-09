@@ -211,27 +211,21 @@
                             <select id="ai-provider" class="w-full p-3 rounded-lg modal-input">
                                 <option value="">Select AI Provider</option>
                                 <option value="chatgpt">OpenAI (GPT-4o/GPT-5)</option>
-                                <option value="perplexity">Perplexity (Web Search)</option>
                             </select>
                         </div>
                         <div>
                             <label for="ai-api-key" class="block text-sm font-medium text-slate-300 mb-2">API Key</label>
                             <input type="password" id="ai-api-key" placeholder="Enter your API key..." class="w-full p-3 rounded-lg modal-input">
+                            <p class="text-xs text-slate-400 mt-1">Don't have an OpenAI key? <a href="https://platform.openai.com/api-keys" target="_blank" class="text-blue-400 underline">Get an API key</a>.</p>
                         </div>
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="ai-openai-model" class="block text-sm font-medium text-slate-300 mb-2">OpenAI Model (optional)</label>
-                                <input type="text" id="ai-openai-model" placeholder="e.g., gpt-4o, gpt-4.1, gpt-5 (if available)" class="w-full p-3 rounded-lg modal-input">
-                            </div>
-                            <div>
-                                <label for="ai-perplexity-key" class="block text-sm font-medium text-slate-300 mb-2">Perplexity API Key (optional)</label>
-                                <input type="password" id="ai-perplexity-key" placeholder="Add for grounded web search" class="w-full p-3 rounded-lg modal-input">
-                            </div>
+                        <div>
+                            <label for="ai-openai-model" class="block text-sm font-medium text-slate-300 mb-2">OpenAI Model (optional)</label>
+                            <input type="text" id="ai-openai-model" placeholder="e.g., gpt-4o, gpt-4.1, gpt-5 (if available)" class="w-full p-3 rounded-lg modal-input">
                         </div>
                         <div>
                             <label for="ai-search-query" class="block text-sm font-medium text-slate-300 mb-2">Analysis Query (optional)</label>
                             <input type="text" id="ai-search-query" placeholder="e.g., Premier League today value bets over 1.90" class="w-full p-3 rounded-lg modal-input">
-                            <p class="text-xs text-slate-400 mt-1">If no image is uploaded, use this query. With Perplexity key, results are grounded with citations. Image upload remains optional.</p>
+                            <p class="text-xs text-slate-400 mt-1">If no image is uploaded, this query helps locate a current match for analysis.</p>
                         </div>
                         <div class="flex gap-3">
                             <button id="test-ai-connection" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition">Test Connection</button>

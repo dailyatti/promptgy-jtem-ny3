@@ -1,13 +1,13 @@
-# 🚀 Netlify Deployment Guide
+﻿# đźš€ Netlify Deployment Guide
 
 Simple step-by-step guide to deploy your Sports Betting Prompt Library to Netlify.
 
-## 📋 Prerequisites
+## đź“‹ Prerequisites
 
 - GitHub account with the repository: `https://github.com/dailyatti/promptgy-jtem-ny3.git`
 - Netlify account (free): `https://netlify.com`
 
-## 🎯 Quick Deployment (Recommended)
+## đźŽŻ Quick Deployment (Recommended)
 
 ### Method 1: Direct GitHub Integration
 
@@ -16,7 +16,7 @@ Simple step-by-step guide to deploy your Sports Betting Prompt Library to Netlif
    - Sign in with your GitHub account
 
 2. **Import from Git**
-   - Click "Add new site" → "Import an existing project"
+   - Click "Add new site" â†’ "Import an existing project"
    - Choose "Deploy with GitHub"
    - Select repository: `dailyatti/promptgy-jtem-ny3`
 
@@ -48,12 +48,12 @@ Simple step-by-step guide to deploy your Sports Betting Prompt Library to Netlif
    - Drag and drop your ZIP file
    - Site will deploy automatically
 
-## ⚙️ Configuration
+## âš™ď¸Ź Configuration
 
 ### Environment Variables (Optional)
 If you want to pre-configure API keys (not recommended for security):
 
-1. Go to Site Settings → Environment Variables
+1. Go to Site Settings â†’ Environment Variables
 2. Add variables (optional):
    ```
    DEEPSEEK_API_KEY=your_key_here
@@ -64,11 +64,11 @@ If you want to pre-configure API keys (not recommended for security):
 **Note:** The app is designed to work without these - users enter their own API keys.
 
 ### Custom Domain (Optional)
-1. Go to Site Settings → Domain Management
+1. Go to Site Settings â†’ Domain Management
 2. Add custom domain
 3. Configure DNS settings as instructed
 
-## 🔧 Build Settings
+## đź”§ Build Settings
 
 The project is configured for static deployment with these settings in `netlify.toml`:
 
@@ -82,19 +82,19 @@ The project is configured for static deployment with these settings in `netlify.
   status = 200
 ```
 
-## 🌐 Live Site Features
+## đźŚ Live Site Features
 
 Once deployed, your site will have:
 
-- ✅ **Cherry-coded light theme** with animations
-- ✅ **Multi-AI provider integration** (DeepSeek, Perplexity, ChatGPT-5)
-- ✅ **Professional betting analysis** with EV calculations
-- ✅ **Drag & drop image analysis**
-- ✅ **Secure API key management** (memory-only)
-- ✅ **Mobile-responsive design**
-- ✅ **HTTPS security** (automatic with Netlify)
+- âś… **Cherry-coded light theme** with animations
+- âś… **Multi-AI provider integration** (OpenAI ChatGPT models)
+- âś… **Professional betting analysis** with EV calculations
+- âś… **Drag & drop image analysis**
+- âś… **Secure API key management** (memory-only)
+- âś… **Mobile-responsive design**
+- âś… **HTTPS security** (automatic with Netlify)
 
-## 📊 Performance Optimizations
+## đź“Š Performance Optimizations
 
 The site is optimized for:
 - Fast loading times (< 2 seconds)
@@ -103,7 +103,7 @@ The site is optimized for:
 - HTTPS security
 - Cross-browser compatibility
 
-## 🔍 Troubleshooting
+## đź”Ť Troubleshooting
 
 ### Common Issues:
 
@@ -125,11 +125,11 @@ The site is optimized for:
 
 ### Support
 
-- 📧 Create an issue on GitHub: https://github.com/dailyatti/promptgy-jtem-ny3/issues
-- 📖 Check Netlify documentation: https://docs.netlify.com/
-- 🆘 Netlify Support: https://netlify.com/support/
+- đź“§ Create an issue on GitHub: https://github.com/dailyatti/promptgy-jtem-ny3/issues
+- đź“– Check Netlify documentation: https://docs.netlify.com/
+- đź† Netlify Support: https://netlify.com/support/
 
-## 📈 Post-Deployment
+## đź“ Post-Deployment
 
 After successful deployment:
 
@@ -148,15 +148,15 @@ After successful deployment:
    - Monitor API usage
    - Review user feedback
 
-## 🎉 Success!
+## đźŽ‰ Success!
 
 Your professional sports betting prompt library is now live and ready to use!
 
 **Live Features:**
-- 🌸 Beautiful cherry blossom theme
-- 🤖 AI-powered betting analysis
-- 📱 Mobile-friendly interface
-- 🔒 Secure and fast deployment
+- đźŚ¸ Beautiful cherry blossom theme
+- đź¤– AI-powered betting analysis
+- đź“± Mobile-friendly interface
+- đź”’ Secure and fast deployment
 
 ---
 
