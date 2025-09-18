@@ -1061,6 +1061,10 @@ function initializeAIIntegration() {
         updateGenerateButton();
     }
 
+    if (aiApiKey) {
+        aiApiKey.addEventListener('input', updateGenerateButton);
+    }
+
     // Save configuration
     if (saveConfigBtn) {
         saveConfigBtn.addEventListener('click', () => {
@@ -1213,7 +1217,7 @@ function initializeAIIntegration() {
                             match_type: event.strLeague,
                             date: event.dateEvent || dateStr,
                             time: event.strTime || null,
-                            odds_visible: 'false',
+                            odds_visible: false,
                             visible_odds: null,
                             betting_markets: null,
                             additional_info: `Real fixture from TheSportsDB (id: ${event.idEvent})`,
@@ -1256,7 +1260,7 @@ function initializeAIIntegration() {
                         match_type: pick.competition || 'Football',
                         date: dateStr,
                         time: null,
-                        odds_visible: 'false',
+                        odds_visible: false,
                         visible_odds: null,
                         betting_markets: null,
                         additional_info: 'Real fixture from Scorebat feed',
@@ -1359,7 +1363,7 @@ function initializeAIIntegration() {
             match_type: randomLeague,
             date: matchDate,
             time: null,
-            odds_visible: 'false',
+            odds_visible: false,
             visible_odds: null,
             betting_markets: null,
             additional_info: `Random ${randomSport.name} match for AI analysis`,
@@ -1367,9 +1371,198 @@ function initializeAIIntegration() {
         };
     }
 
+    function normalizeBoolean(value) {
+        if (typeof value === 'boolean') return value;
+        if (typeof value === 'number') return value !== 0;
+        if (typeof value === 'string') {
+            const normalized = value.trim().toLowerCase();
+            return ['true', 'yes', 'y', '1'].includes(normalized);
+        }
+        return false;
+    }
+
+    function extractTeamsFromMatchString(matchString) {
+        if (!matchString || typeof matchString !== 'string') {
+            return { team1: '', team2: '' };
+        }
+
+        const normalized = matchString.replace(/\s+/g, ' ').trim();
+        const separators = [' vs ', ' v ', ' - ', ' – ', ' — ', ' @ ', ' against '];
+
+        for (const separator of separators) {
+            if (normalized.toLowerCase().includes(separator.trim())) {
+                const parts = normalized.split(new RegExp(separator, 'i')).map(part => part.trim()).filter(Boolean);
+                if (parts.length === 2) {
+                    return { team1: parts[0], team2: parts[1] };
+                }
+            }
+        }
+
+        return { team1: '', team2: '' };
+    }
+
+    function pickFirstString(...values) {
+        for (const value of values) {
+            if (typeof value === 'string' && value.trim()) {
+                return value.trim();
+            }
+        }
+        return '';
+    }
+
+    function normalizeImageAnalysisData(rawData) {
+        if (!rawData || typeof rawData !== 'object') {
+            return null;
+        }
+
+        // Some models may wrap the payload under matchData
+        const payload = rawData.matchData && typeof rawData.matchData === 'object' ? rawData.matchData : rawData;
+
+        const matchStringCandidate = pickFirstString(payload.match, payload.matchup, payload.fixture, payload.event);
+        const fallbackTeams = extractTeamsFromMatchString(matchStringCandidate);
+
+        const team1 = pickFirstString(
+            payload.team1,
+            payload.team_one,
+            payload.home_team,
+            payload.homeTeam,
+            payload.club1,
+            fallbackTeams.team1
+        );
+
+        const team2 = pickFirstString(
+            payload.team2,
+            payload.team_two,
+            payload.away_team,
+            payload.awayTeam,
+            payload.club2,
+            fallbackTeams.team2
+        );
+
+        const sport = pickFirstString(payload.sport, payload.sport_type, payload.discipline) || 'Football';
+        const matchType = pickFirstString(payload.match_type, payload.competition, payload.league, payload.tournament, payload.event_type);
+        const date = pickFirstString(payload.date, payload.match_date, payload.event_date, payload.kickoff_date);
+        const time = pickFirstString(payload.time, payload.match_time, payload.event_time, payload.kickoff_time);
+
+        let visibleOdds = payload.visible_odds !== undefined ? payload.visible_odds : payload.odds;
+        if (Array.isArray(visibleOdds)) {
+            visibleOdds = visibleOdds
+                .filter(Boolean)
+                .map(odds => (typeof odds === 'string' ? odds.trim() : String(odds)))
+                .join(' | ');
+        } else if (visibleOdds && typeof visibleOdds === 'object') {
+            visibleOdds = Object.entries(visibleOdds)
+                .filter(([key, value]) => value !== undefined && value !== null && value !== '')
+                .map(([key, value]) => `${key}: ${value}`)
+                .join(' | ');
+        } else if (visibleOdds !== undefined && visibleOdds !== null && typeof visibleOdds !== 'string') {
+            visibleOdds = String(visibleOdds);
+        }
+        visibleOdds = (visibleOdds || '').trim();
+
+        const oddsVisible = normalizeBoolean(
+            payload.odds_visible !== undefined ? payload.odds_visible : payload.oddsVisible !== undefined ? payload.oddsVisible : visibleOdds.length > 0
+        );
+
+        let bettingMarketsRaw = payload.betting_markets ?? payload.visible_markets ?? payload.markets ?? payload.market_summary;
+        let bettingMarkets = '';
+        if (Array.isArray(bettingMarketsRaw)) {
+            bettingMarkets = bettingMarketsRaw.filter(Boolean).map(market => (typeof market === 'string' ? market.trim() : String(market))).join(' | ');
+        } else {
+            bettingMarkets = pickFirstString(bettingMarketsRaw);
+        }
+
+        const additionalPieces = [payload.additional_info, payload.notes, payload.summary, payload.context]
+            .filter(Boolean)
+            .map(piece => (typeof piece === 'string' ? piece.trim() : JSON.stringify(piece)));
+        const additionalInfo = additionalPieces.join(' ').trim();
+
+        if (!team1 || !team2) {
+            return null;
+        }
+
+        return {
+            sport,
+            team1,
+            team2,
+            match_type: matchType || 'Undisclosed Competition',
+            date,
+            time,
+            odds_visible: oddsVisible,
+            visible_odds: visibleOdds,
+            betting_markets: bettingMarkets,
+            additional_info: additionalInfo,
+            fromImage: true
+        };
+    }
+
+    function detectTipMarket(description, matchData) {
+        const text = typeof description === 'string' ? description.toLowerCase() : '';
+        if (!text) return null;
+
+        const teamNames = [];
+        if (matchData?.team1) teamNames.push(matchData.team1.toLowerCase());
+        if (matchData?.team2) teamNames.push(matchData.team2.toLowerCase());
+
+        const includesTeam = teamNames.some(name => name && text.includes(name));
+        const matchOutcomeRegex = /\b(win|wins|victory|moneyline)\b/;
+        const keywordHits = ['match winner', '1x2', 'draw no bet', 'double chance'].some(keyword => text.includes(keyword));
+
+        if ((includesTeam && (matchOutcomeRegex.test(text) || keywordHits)) || /\bdraw\b/.test(text)) {
+            return 'match_outcome';
+        }
+
+        return null;
+    }
+
+    function sanitizeGeneratedTips(tips, matchData) {
+        if (!Array.isArray(tips)) return [];
+
+        const seenMarkets = new Set();
+        const seenDescriptions = new Set();
+        const sanitized = [];
+
+        for (const tip of tips) {
+            if (!tip || typeof tip !== 'object') continue;
+
+            const description = typeof tip.description === 'string' ? tip.description.trim() : '';
+            const normalizedDescription = description.toLowerCase();
+
+            if (description && seenDescriptions.has(normalizedDescription)) {
+                continue;
+            }
+
+            const market = detectTipMarket(description, matchData);
+            if (market === 'match_outcome' && seenMarkets.has('match_outcome')) {
+                continue;
+            }
+
+            if (market) {
+                seenMarkets.add(market);
+            }
+
+            sanitized.push({ ...tip });
+
+            if (description) {
+                seenDescriptions.add(normalizedDescription);
+            }
+        }
+
+        if (!sanitized.length && tips.length) {
+            sanitized.push({ ...tips[0] });
+        }
+
+        return sanitized;
+    }
+
     // Real AI Image Analysis Function with OpenAI Vision API
     async function analyzeMatchImage(imageElement, config) {
-        if (config.provider !== 'chatgpt' || !config.apiKey) {
+        const provider = (config.provider || 'chatgpt').toLowerCase();
+        if (provider !== 'chatgpt') {
+            throw new Error('Image analysis currently supports only the OpenAI ChatGPT provider');
+        }
+
+        if (!config.apiKey) {
             throw new Error('OpenAI ChatGPT API key required for image analysis');
         }
 
@@ -1436,7 +1629,14 @@ If unclear, return:
             }
 
             const data = await response.json();
-            const content = data.choices[0].message.content;
+            const content = data?.choices?.[0]?.message?.content;
+
+            if (!content) {
+                return {
+                    success: false,
+                    error: 'No response returned from image analysis'
+                };
+            }
             
             console.log('Raw AI response:', content);
             
@@ -1455,28 +1655,28 @@ If unclear, return:
                 };
             }
             
-            if (!analysisResult.success) {
+            if (analysisResult.success === false) {
                 return {
                     success: false,
                     error: analysisResult.error || "Could not analyze image"
                 };
             }
 
+            let matchData = normalizeImageAnalysisData(analysisResult);
+            if (!matchData && analysisResult.data) {
+                matchData = normalizeImageAnalysisData(analysisResult.data);
+            }
+
+            if (!matchData) {
+                return {
+                    success: false,
+                    error: analysisResult.error || "Could not detect match information from image"
+                };
+            }
+
             return {
                 success: true,
-                matchData: {
-                    sport: analysisResult.sport,
-                    team1: analysisResult.team1,
-                    team2: analysisResult.team2,
-                    match_type: analysisResult.match_type,
-                    date: analysisResult.date,
-                    time: analysisResult.time,
-                    odds_visible: analysisResult.odds_visible,
-                    visible_odds: analysisResult.visible_odds,
-                    betting_markets: analysisResult.betting_markets,
-                    additional_info: analysisResult.additional_info,
-                    fromImage: true
-                }
+                matchData
             };
             
         } catch (error) {
@@ -1512,14 +1712,19 @@ If unclear, return:
                 let basePrompt = sportData.specificMatchPrompt || sportData.prompt;
                 basePrompt = basePrompt.replace('{MATCH}', `${matchData.team1} vs ${matchData.team2}`);
                 basePrompt = basePrompt.replace('{DATE}', matchData.date || 'Today');
-                const oddsInfo = matchData.odds_visible === 'true' && matchData.visible_odds 
-                    ? `\n\nVISIBLE ODDS FROM IMAGE: ${matchData.visible_odds}\nVISIBLE BETTING MARKETS: ${matchData.betting_markets || 'Standard markets'}`
+                const oddsVisible = normalizeBoolean(matchData.odds_visible);
+                const visibleOddsText = Array.isArray(matchData.visible_odds)
+                    ? matchData.visible_odds.filter(Boolean).join(' | ')
+                    : (matchData.visible_odds || '');
+                const oddsInfo = oddsVisible && visibleOddsText
+                    ? `\n\nVISIBLE ODDS FROM IMAGE: ${visibleOddsText}\nVISIBLE BETTING MARKETS: ${matchData.betting_markets || 'Standard markets'}`
                     : '';
                 finalPrompt = `${basePrompt}${oddsInfo}
 
 STRICT GROUNDEDNESS:
 - Use ONLY the data detected from the image above. Do not fabricate teams, odds, markets, or dates.
 - If odds/markets are not clearly visible, return insufficient_data.
+- Provide only the single highest-confidence bet derived directly from the screenshot. Never output multiple conflicting outcomes.
 
 Respond JSON only (no markdown):
 {
@@ -1537,6 +1742,9 @@ Respond JSON only (no markdown):
                     finalPrompt = `${basePrompt}${oddsInfo}
 
 IMPORTANT: Generate exactly 3 professional betting tips${matchData.team1 && matchData.team2 ? ` for ${matchData.team1} vs ${matchData.team2}` : ''} in ${matchData.match_type || 'the chosen competition'}.
+- Provide at most one match-outcome (1X2 / moneyline) pick; never list mutually exclusive winners.
+- Ensure the tips cover different markets or angles (outcome, totals, props, etc.) unless verified data is missing.
+- If you cannot justify three unique value bets from verified data, set "insufficient_data": true and explain why.
 ${matchData.additional_info ? 'Additional context: ' + matchData.additional_info : ''}
 
 RESPOND WITH ONLY THIS JSON FORMAT (no markdown, no extra text):
@@ -1593,11 +1801,15 @@ RESPOND WITH ONLY THIS JSON FORMAT (no markdown, no extra text):
                     throw new Error("AI tip response was not valid JSON format");
                 }
                 
-                if (usingEvidence && tipsResult && Array.isArray(tipsResult.tips)) {
-                    tipsResult.tips = tipsResult.tips.map(t => ({
-                        ...t,
-                        sources: Array.isArray(t.sources) && t.sources.length ? t.sources : evidenceSources
-                    }));
+                if (tipsResult && Array.isArray(tipsResult.tips)) {
+                    let sanitizedTips = sanitizeGeneratedTips(tipsResult.tips, matchData);
+                    if (usingEvidence) {
+                        sanitizedTips = sanitizedTips.map(t => ({
+                            ...t,
+                            sources: Array.isArray(t.sources) && t.sources.length ? t.sources : evidenceSources
+                        }));
+                    }
+                    tipsResult.tips = sanitizedTips;
                 }
                 return tipsResult;
                 
@@ -1637,8 +1849,12 @@ RESPOND WITH ONLY THIS JSON FORMAT (no markdown, no extra text):
     function displayGeneratedTips(tips, matchData) {
         const tipContainer = document.getElementById('ai-tips-container');
         
-        const oddsDisplay = matchData.odds_visible === 'true' && matchData.visible_odds 
-            ? `<span class="text-yellow-400">📊 Odds: ${matchData.visible_odds}</span>` 
+        const oddsVisible = normalizeBoolean(matchData.odds_visible);
+        const visibleOddsText = Array.isArray(matchData.visible_odds)
+            ? matchData.visible_odds.filter(Boolean).join(' | ')
+            : (matchData.visible_odds || '');
+        const oddsDisplay = oddsVisible && visibleOddsText
+            ? `<span class="text-yellow-400">📊 Odds: ${visibleOddsText}</span>` 
             : '';
             
         const matchInfoHtml = `
@@ -1706,10 +1922,13 @@ RESPOND WITH ONLY THIS JSON FORMAT (no markdown, no extra text):
     };
 
     function updateGenerateButton() {
-        const config = JSON.parse(localStorage.getItem('aiConfig') || '{}');
-        if (generateTipsBtn) {
-            const needsKey = config.apiKey;
-            generateTipsBtn.disabled = !needsKey;
+        const storedConfig = JSON.parse(localStorage.getItem('aiConfig') || '{}');
+        const apiKeyInput = document.getElementById('ai-api-key');
+        const generateButton = document.getElementById('generate-tips');
+        const currentKey = (apiKeyInput?.value || storedConfig.apiKey || '').trim();
+
+        if (generateButton) {
+            generateButton.disabled = currentKey.length === 0;
         }
     }
 
