@@ -1,0 +1,45 @@
+{
+  "name": "advanced-sports-betting-prompt-library",
+  "version": "3.0.0",
+  "description": "Professional AI-powered sports betting prompt library with cherry-coded theme and multi-provider AI integration",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "python -m http.server 8000",
+    "build": "echo 'No build process needed - static files only'",
+    "test": "echo 'Tests would go here'",
+    "lint": "echo 'Linting would go here'",
+    "deploy": "netlify deploy --prod"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dailyatti/promptgy-jtem-ny3.git"
+  },
+  "keywords": [
+    "sports-betting",
+    "ai",
+    "prompt-library",
+    "deepseek",
+    "chatgpt",
+    "cherry-theme",
+    "betting-analysis",
+    "phd-level",
+    "professional"
+  ],
+  "author": "Daily Atti <dailyatti@example.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dailyatti/promptgy-jtem-ny3/issues"
+  },
+  "homepage": "https://github.com/dailyatti/promptgy-jtem-ny3#readme",
+  "devDependencies": {},
+  "dependencies": {},
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}

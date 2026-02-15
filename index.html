@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Sports Betting Prompt Library</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=3.3.0">
+</head>
+
+<body class="text-white">
+    <!-- Floating Background Elements -->
+    <div class="floating-elements">
+        <div class="floating-circle w-72 h-72 top-10 left-10 opacity-20"
+            style="animation-delay: -2s; animation-duration: 18s;"></div>
+        <div class="floating-circle w-40 h-40 top-1/3 right-20 opacity-15"
+            style="animation-delay: -5s; animation-duration: 14s;"></div>
+        <div class="floating-circle w-56 h-56 bottom-20 left-1/4 opacity-25"
+            style="animation-delay: -1s; animation-duration: 20s;"></div>
+        <div class="floating-circle w-32 h-32 top-2/3 right-1/3 opacity-10"
+            style="animation-delay: -7s; animation-duration: 16s;"></div>
+    </div>
+
+    <div id="page-top" class="container relative z-10">
+        <!-- Header -->
+        <header class="header">
+            <button id="theme-toggle" class="theme-toggle" title="Toggle Theme">
+                <span id="theme-icon">🌙</span>
+            </button>
+            <h1 class="header-title">AI Prompt Library</h1>
+            <p class="header-subtitle">Professional, editable sports betting prompts collection with modern design and
+                advanced features.</p>
+        </header>
+
+        <!-- Search and Filtering -->
+        <div class="search-section">
+            <div class="search-box">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <label for="search-input" class="sr-only">Search for sports</label>
+                    <input type="text" id="search-input" placeholder="Search for sports..." class="search-input">
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <button
+                    class="category-filter category-badge px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300"
+                    data-category="all">All</button>
+                <button
+                    class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300"
+                    data-category="favorites">⭐ Favorites</button>
+                <button
+                    class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300"
+                    data-category="traditional">Traditional</button>
+                <button
+                    class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300"
+                    data-category="esports">E-Sports</button>
+                <button
+                    class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300"
+                    data-category="motor">Motorsports</button>
+                <button
+                    class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300"
+                    data-category="virtual">Virtual</button>
+                <button
+                    class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300"
+                    data-category="water">Water Sports</button>
+                <button
+                    class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300"
+                    data-category="precision">Precision</button>
+                <button
+                    class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300"
+                    data-category="winter">Winter Sports</button>
+                <button
+                    class="category-filter px-4 py-2 rounded-full text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all duration-300"
+                    data-category="logic">Logic Games</button>
+                <button id="add-new-prompt-btn"
+                    class="btn-add-new px-4 py-2 rounded-full text-sm font-semibold transition-transform hover:scale-105">Add
+                    New Prompt</button>
+            </div>
+        </div>
+
+        <!-- Sports Grid -->
+        <div id="sports-grid" class="sports-grid"></div>
+        <div id="no-results" class="text-center py-10" style="display: none;">
+            <p class="text-xl text-slate-400 font-medium">No sports match the current filter.</p>
+        </div>
+        <div id="load-more-sentinel" class="h-1"></div>
+
+        <!-- Prompt Display -->
+        <div id="prompt-container"
+            class="prompt-container rounded-3xl p-6 lg:p-10 shadow-2xl prompt-transition prompt-hidden">
+            <button id="close-prompt-button" aria-label="Close prompt"
+                class="absolute top-4 right-5 text-slate-400 hover:text-white transition-all duration-300 text-3xl leading-none hover:scale-110 hover:rotate-90">&times;</button>
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                    <h2 id="prompt-title" class="text-2xl lg:text-4xl font-bold text-blue-400 mb-2"></h2>
+                    <p id="prompt-category" class="text-slate-400 text-sm"></p>
+                </div>
+                <div class="flex gap-3 mt-4 lg:mt-0">
+                    <button id="edit-button"
+                        class="bg-slate-600 hover:bg-slate-500 text-white font-semibold py-3 px-6 rounded-xl flex items-center gap-2 transition-all duration-300 transform hover:scale-105">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                            </path>
+                        </svg>
+                        Edit
+                    </button>
+                    <button id="copy-button"
+                        class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center gap-2 transition-all duration-300 transform hover:scale-105">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
+                            viewBox="0 0 16 16">
+                            <path
+                                d="M4 1.5H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h1V1.5z" />
+                            <path
+                                d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z" />
+                        </svg>
+                        <span id="copy-text">Copy</span>
+                    </button>
+                </div>
+            </div>
+            <div class="relative">
+                <textarea id="prompt-text" readonly
+                    class="w-full h-80 lg:h-96 bg-slate-900/50 border border-slate-600 rounded-2xl p-6 text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none text-sm lg:text-base leading-relaxed transition-all duration-300"></textarea>
+            </div>
+
+            <!-- Effectiveness Slider -->
+            <div class="mt-4 p-4 bg-slate-800/30 rounded-xl border border-slate-600/50">
+                <div class="flex items-center justify-between mb-2">
+                    <label for="effectiveness-slider" class="text-sm font-medium text-slate-300">Prompt
+                        Effectiveness</label>
+                    <span id="effectiveness-value" class="text-sm font-bold text-blue-400">75%</span>
+                </div>
+                <input type="range" id="effectiveness-slider" min="1" max="100" value="75"
+                    class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-thumb">
+                <div class="flex justify-between text-xs text-slate-400 mt-1">
+                    <span>Low (1%)</span>
+                    <span>Medium (50%)</span>
+                    <span>High (100%)</span>
+                </div>
+            </div>
+
+            <!-- Specific Match and Date Options -->
+            <div id="specific-match-options"
+                class="mt-4 p-4 bg-slate-800/30 rounded-xl border border-slate-600/50 hidden">
+                <h4 class="text-sm font-medium text-slate-300 mb-3">🎯 Specific Analysis Options</h4>
+
+                <!-- Specific Match Option -->
+                <div class="mb-3">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="specific-match-checkbox"
+                            class="form-checkbox h-4 w-4 text-blue-600 bg-slate-700 border-slate-600 rounded focus:ring-blue-500">
+                        <span class="text-sm text-slate-300"><span id="sport-icon">⚽</span> Specify match details</span>
+                    </label>
+                    <div id="match-input-container" class="mt-2 hidden">
+                        <input type="text" id="specific-match-input" placeholder="e.g. Barcelona vs Real Madrid"
+                            class="w-full p-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- Specific Date Option -->
+                <div class="mb-3">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="specific-date-checkbox"
+                            class="form-checkbox h-4 w-4 text-blue-600 bg-slate-700 border-slate-600 rounded focus:ring-blue-500">
+                        <span class="text-sm text-slate-300">📅 Specify match date</span>
+                    </label>
+                    <div id="date-input-container" class="mt-2 hidden">
+                        <input type="date" id="specific-date-input"
+                            class="w-full p-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- PhD Screenshot Analysis Option (Top 7 Only) -->
+                <div id="screenshot-option-container" class="mb-3 screenshot-option" style="display: none;">
+                    <div class="option-divider"></div>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="screenshot-analysis-checkbox"
+                            class="form-checkbox h-4 w-4 text-emerald-600 bg-slate-700 border-slate-600 rounded focus:ring-emerald-500">
+                        <span class="text-sm text-slate-300">📸🎓 PhD Screenshot Analysis <span
+                                class="text-xs text-emerald-400 font-semibold ml-1">TOP 7</span></span>
+                    </label>
+                    <p class="text-xs text-slate-500 mt-1 ml-6">Screenshot elemzés + PhD matek a
+                        manualphdcalculator77.netlify.app számításaival — egyetlen prompt</p>
+                    <div id="bankroll-input-container" class="mt-2 ml-6" style="display: none;">
+                        <label class="text-xs text-slate-400 mb-1 block">💰 Bankroll (optional — for Kelly stake
+                            calculation):</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="bankroll-input" placeholder="e.g. 1000" min="1" step="1"
+                                class="w-36 p-1.5 text-sm bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            <span class="text-xs text-slate-500">€ / $ / units</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="copy-feedback"
+                class="text-center text-green-400 mt-4 h-6 transition-all duration-300 opacity-0 font-semibold">✓ Prompt
+                successfully copied to clipboard!</div>
+
+            <!-- Tool Buttons at Bottom of Prompt Window -->
+            <div class="tools-inline mt-6 flex flex-wrap gap-4 justify-center" id="tools-inline" style="display:none;">
+                <button id="export-btn-inline" class="tool-btn px-4 py-2 rounded-full transition-all duration-300"
+                    title="Export to JSON">
+                    <span>📥</span><span class="ml-2">Export</span>
+                </button>
+                <label for="import-input-inline"
+                    class="tool-btn px-4 py-2 rounded-full cursor-pointer transition-all duration-300"
+                    title="Import from JSON">
+                    <span>📤</span><span class="ml-2">Import</span>
+                    <input id="import-input-inline" type="file" accept="application/json" class="hidden" />
+                </label>
+                <button id="reset-btn-inline" class="tool-btn px-4 py-2 rounded-full transition-all duration-300"
+                    title="Reset to defaults">
+                    <span>🔄</span><span class="ml-2">Reset</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tools Section Moved Closer -->
+        <div class="tools-section rounded-3xl p-8 mt-4" id="tools-section">
+            <h2 class="text-2xl font-bold text-center mb-8 text-white">Tools and Settings</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center flex flex-col items-center">
+                    <button id="export-btn"
+                        class="bg-green-600 hover:bg-green-700 text-white rounded-full p-4 transition-all duration-300 transform hover:scale-110 mb-3"
+                        title="Export to JSON">
+                        <span class="text-2xl">📥</span>
+                    </button>
+                    <h3 class="font-semibold mb-2 text-slate-200">Export</h3>
+                    <p class="text-sm text-slate-400">Save all your prompts to a JSON file for backup or sharing
+                        purposes.</p>
+                </div>
+                <div class="text-center flex flex-col items-center">
+                    <label for="import-input"
+                        class="inline-block bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 transition-all duration-300 transform hover:scale-110 cursor-pointer mb-3"
+                        title="Import from JSON">
+                        <span class="text-2xl">📤</span>
+                        <input id="import-input" type="file" accept="application/json" class="hidden" />
+                    </label>
+                    <h3 class="font-semibold mb-2 text-slate-200">Import</h3>
+                    <p class="text-sm text-slate-400">Load previously saved prompts from a JSON file.</p>
+                </div>
+                <div class="text-center flex flex-col items-center">
+                    <button id="reset-btn"
+                        class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 transition-all duration-300 transform hover:scale-110 mb-3"
+                        title="Reset to defaults">
+                        <span class="text-2xl">🔄</span>
+                    </button>
+                    <h3 class="font-semibold mb-2 text-slate-200">Reset</h3>
+                    <p class="text-sm text-slate-400">Restore original prompts. Warning: all custom prompts will be
+                        deleted!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Usage Guide -->
+        <div class="quick-guide-section rounded-3xl p-6 mt-8" id="quick-guide">
+            <h2 class="text-xl font-bold text-center mb-6 text-white">📖 Quick Usage Guide</h2>
+            <div class="grid md:grid-cols-4 gap-4">
+                <div class="guide-step rounded-xl p-4">
+                    <div class="text-2xl mb-2">1️⃣</div>
+                    <h3 class="font-bold mb-2 text-blue-400">Browse Sports</h3>
+                    <p class="text-sm text-slate-300">Click any sport card to view betting prompts</p>
+                </div>
+                <div class="guide-step rounded-xl p-4">
+                    <div class="text-2xl mb-2">2️⃣</div>
+                    <h3 class="font-bold mb-2 text-green-400">Copy & Use</h3>
+                    <p class="text-sm text-slate-300">Copy prompts to use in your AI tools</p>
+                </div>
+                <div class="guide-step rounded-xl p-4">
+                    <div class="text-2xl mb-2">3️⃣</div>
+                    <h3 class="font-bold mb-2 text-purple-400">AI Integration</h3>
+                    <p class="text-sm text-slate-300">Configure AI for automatic analysis</p>
+                </div>
+                <div class="guide-step rounded-xl p-4">
+                    <div class="text-2xl mb-2">4️⃣</div>
+                    <h3 class="font-bold mb-2 text-orange-400">Professional Tips</h3>
+                    <p class="text-sm text-slate-300">Get PhD-level betting insights</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Integration Section -->
+        <div class="ai-section rounded-3xl p-8 mt-4" id="ai-section">
+            <h2 class="text-2xl font-bold text-center mb-6 text-white">🤖 AI Integration & Analysis</h2>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="ai-config-panel rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-4 text-blue-400">🤖 AI Configuration</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">AI Provider</label>
+                            <select id="ai-provider" class="w-full p-3 rounded-lg modal-input">
+                                <option value="">Select AI Provider</option>
+                                <option value="chatgpt">OpenAI (GPT-4o/GPT-5)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="ai-api-key" class="block text-sm font-medium text-slate-300 mb-2">API
+                                Key</label>
+                            <input type="password" id="ai-api-key" placeholder="Enter your API key..."
+                                class="w-full p-3 rounded-lg modal-input">
+                            <p class="text-xs text-slate-400 mt-1">Don't have an OpenAI key? <a
+                                    href="https://platform.openai.com/api-keys" target="_blank"
+                                    class="text-blue-400 underline">Get an API key</a>.</p>
+                        </div>
+                        <div>
+                            <label for="ai-openai-model" class="block text-sm font-medium text-slate-300 mb-2">OpenAI
+                                Model (optional)</label>
+                            <input type="text" id="ai-openai-model"
+                                placeholder="e.g., gpt-4o, gpt-4.1, gpt-5 (if available)"
+                                class="w-full p-3 rounded-lg modal-input">
+                        </div>
+                        <div>
+                            <label for="ai-search-query" class="block text-sm font-medium text-slate-300 mb-2">Analysis
+                                Query (optional)</label>
+                            <input type="text" id="ai-search-query"
+                                placeholder="e.g., Premier League today value bets over 1.90"
+                                class="w-full p-3 rounded-lg modal-input">
+                            <p class="text-xs text-slate-400 mt-1">If no image is uploaded, this query helps locate a
+                                current match for analysis.</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button id="test-ai-connection"
+                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition">Test
+                                Connection</button>
+                            <button id="save-ai-config"
+                                class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition">Save
+                                Config</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="image-upload-panel rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-4 text-purple-400">📸 Image Analysis</h3>
+                    <div id="drop-zone"
+                        class="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center transition-all duration-300 hover:border-blue-500">
+                        <div class="text-4xl mb-4">📂</div>
+                        <p class="text-slate-300 mb-2">Drag & drop match images here</p>
+                        <p class="text-sm text-slate-400">or click to select files</p>
+                        <input type="file" id="file-input" accept="image/*" multiple class="hidden">
+                    </div>
+                    <div id="uploaded-images" class="mt-4 space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- Tips Generation -->
+            <div class="tips-generation-panel rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-green-400">💡 AI-Generated Tips</h3>
+                    <button id="generate-tips"
+                        class="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white py-2 px-6 rounded-lg transition"
+                        disabled>Generate Tips</button>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm font-semibold text-red-400">
+                        Important: Real, verifiable tips are generated only when you upload a screenshot of the exact
+                        match page (e.g., from Soccer24.com or a similar site). Without a match screenshot, any tips are
+                        for research/illustration only.
+                    </p>
+                </div>
+                <div id="ai-tips-container" class="space-y-4">
+                    <p class="text-slate-400 text-center py-8">Configure AI provider and upload match data to generate
+                        professional betting tips.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Professional Tips & Disclaimer -->
+        <div class="disclaimer-section rounded-3xl p-6 mt-8" id="disclaimer-section">
+            <h2 class="text-lg font-bold text-center mb-4 text-orange-400">⚠️ Professional Disclaimer</h2>
+            <div class="text-sm text-slate-300 space-y-2 max-w-4xl mx-auto text-center">
+                <p>This AI-powered sports betting prompt library is for educational and analytical purposes only.
+                    Generated tips are based on AI analysis and should not be considered guaranteed predictions or
+                    financial advice.</p>
+                <p><strong>Always bet responsibly and within your means.</strong> Ensure sports betting is legal in your
+                    jurisdiction.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modal-title" class="text-2xl font-bold mb-6 text-white">Edit Prompt</h3>
+            <form id="edit-form" class="space-y-4">
+                <input type="hidden" id="edit-key">
+                <div>
+                    <label for="edit-name" class="block text-sm font-medium text-slate-300 mb-1">Sport Name</label>
+                    <input type="text" id="edit-name" required class="w-full p-3 rounded-lg modal-input">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-icon" class="block text-sm font-medium text-slate-300 mb-1">Icon
+                            (emoji)</label>
+                        <input type="text" id="edit-icon" required class="w-full p-3 rounded-lg modal-input">
+                    </div>
+                    <div>
+                        <label for="edit-category"
+                            class="block text-sm font-medium text-slate-300 mb-1">Category</label>
+                        <select id="edit-category" required class="w-full p-3 rounded-lg modal-input">
+                            <option value="traditional">Traditional</option>
+                            <option value="esports">E-Sports</option>
+                            <option value="motor">Motorsports</option>
+                            <option value="virtual">Virtual</option>
+                            <option value="water">Water Sports</option>
+                            <option value="precision">Precision</option>
+                            <option value="winter">Winter Sports</option>
+                            <option value="logic">Logic Games</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label for="edit-prompt-title" class="block text-sm font-medium text-slate-300 mb-1">Prompt
+                        Title</label>
+                    <input type="text" id="edit-prompt-title" required class="w-full p-3 rounded-lg modal-input">
+                </div>
+                <div>
+                    <label for="edit-prompt" class="block text-sm font-medium text-slate-300 mb-1">Prompt Text</label>
+                    <textarea id="edit-prompt" required rows="6"
+                        class="w-full p-3 rounded-lg modal-input resize-y"></textarea>
+                </div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" id="cancel-edit-btn"
+                        class="px-6 py-2 rounded-lg bg-slate-600 hover:bg-slate-500 transition">Cancel</button>
+                    <button type="submit"
+                        class="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation/Alert Modal -->
+    <div id="alert-modal" class="alert-modal-overlay">
+        <div class="alert-modal-content text-center">
+            <h3 id="alert-modal-title" class="text-xl font-bold mb-4 text-white">Attention</h3>
+            <p id="alert-modal-message" class="text-slate-300 mb-6"></p>
+            <div id="alert-modal-buttons" class="flex justify-center gap-4">
+                <!-- Buttons are added dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=3.3.0"></script>
+</body>
+
+</html>
