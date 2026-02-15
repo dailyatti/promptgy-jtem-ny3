@@ -1289,6 +1289,35 @@ function showPrompt(sportKey) {
     updateSelectedSport(sportKey);
 }
 
+// Sport-specific placeholder examples for the match input field
+const matchPlaceholders = {
+    football: 'e.g. Manchester City vs Arsenal',
+    basketball: 'e.g. Lakers vs Celtics',
+    tennis: 'e.g. Djokovic vs Alcaraz',
+    american_football: 'e.g. Chiefs vs Eagles',
+    baseball: 'e.g. Yankees vs Dodgers',
+    ice_hockey: 'e.g. Maple Leafs vs Bruins',
+    boxing: 'e.g. Canelo vs Crawford',
+    mma: 'e.g. Jones vs Aspinall',
+    golf: 'e.g. Scottie Scheffler - Masters',
+    formula1: 'e.g. Max Verstappen - Monaco GP',
+    motogp: 'e.g. Bagnaia - Mugello GP',
+    handball: 'e.g. Barcelona vs Kiel',
+    volleyball: 'e.g. Italy vs Poland',
+    rugby: 'e.g. New Zealand vs South Africa',
+    cricket: 'e.g. India vs Australia',
+    darts: 'e.g. Luke Humphries vs Luke Littler',
+    table_tennis: 'e.g. Fan Zhendong vs Ma Long',
+    snooker: "e.g. O'Sullivan vs Trump",
+    waterpolo: 'e.g. Hungary vs Serbia',
+    cycling: 'e.g. Pogacar - Tour de France',
+    esports_csgo: 'e.g. FaZe vs Navi',
+    esports_lol: 'e.g. T1 vs Gen.G',
+    esports_dota2: 'e.g. Team Spirit vs Gaimin Gladiators',
+    esports_valorant: 'e.g. Sentinels vs Fnatic',
+    chess: 'e.g. Carlsen vs Ding Liren'
+};
+
 function showSpecificMatchOptions(sport) {
     const optionsContainer = document.getElementById('specific-match-options');
     if (!optionsContainer || !sport.specificMatchPrompt) return;
@@ -1298,6 +1327,12 @@ function showSpecificMatchOptions(sport) {
     const sportIcon = document.getElementById('sport-icon');
     if (sportIcon) {
         sportIcon.textContent = sport.icon;
+    }
+
+    // Update match input placeholder dynamically based on current sport
+    const matchInput = document.getElementById('specific-match-input');
+    if (matchInput) {
+        matchInput.placeholder = matchPlaceholders[currentSport] || `e.g. Team A vs Team B`;
     }
 
     // Show/hide PhD Screenshot option based on whether sport is in top 7
@@ -1370,11 +1405,11 @@ function showSpecificMatchOptions(sport) {
     }
 
     // Setup input change listeners
-    const matchInput = document.getElementById('specific-match-input');
+    const matchInputListener = document.getElementById('specific-match-input');
     const dateInput = document.getElementById('specific-date-input');
 
-    if (matchInput) {
-        matchInput.addEventListener('input', updatePromptText);
+    if (matchInputListener) {
+        matchInputListener.addEventListener('input', updatePromptText);
     }
     if (dateInput) {
         dateInput.addEventListener('change', updatePromptText);
